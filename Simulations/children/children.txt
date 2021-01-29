@@ -1,0 +1,115 @@
+// Number of children as output
+
+// Initialise simulation parameters
+initialize() {
+   initializeSLiMOptions(keepPedigrees=T);       // remember who the parents are
+   initializeMutationRate(1e-7);                // contstant mutation rate
+   initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutation
+   initializeMutationType("m2", 0.5, "f", 0.0); // introduced selected mutation
+   m2.convertToSubstitution = F;                // remember m2 even after it fixes
+   initializeGenomicElementType("g1", m1, 1.0); // in g1 elements, mutations are always type m1 (neutral)
+   initializeGenomicElement(g1, 0, 99999);      // create a g1 100,000 bp long
+   initializeRecombinationRate(1e-8);           // constant recombination rate
+}
+
+// set the fitness of m2 to neutral (==1) 
+// as it will be defined for each individual later
+fitness(m2) { 
+  return 1.0; 
+} 
+
+// start the simulation
+1 { 
+  // save this run's identifier, used to save and restore
+  defineConstant("simID", getSeed()); 
+  sim.setValue("finalGen", F);
+  
+  // add a population of 10,000 individuals
+  sim.addSubpop("p1", 10000); 
+}
+
+// each generation, set phenotypes and fitness for each individual
+1: late() {
+  // get individuals
+  inds = sim.subpopulations.individuals; 
+  for (ind in inds){
+    // set phenotype1 as standard normal. Add 1 phenotype unit if m2 is present in either genome
+    phenotype1 = rnorm(1,0,1)+ifelse(ind.countOfMutationsOfType(m2)>0,1,0);
+    ind.setValue("phenotype1",phenotype1); 
+    // set fitness as 1, adjusted for phenotype1 where one unit corresponds
+    // to a 0.05 uplift in fitness on average (0.01 SD)
+    ind.fitnessScaling = 1+phenotype1*rnorm(1,0.05,0.01);
+  }
+} 
+
+// in generation 1000 introduce a beneficial mutation into a random genome
+// save the simulation in case the mutation is immediately lost
+1000 late() {
+  // save the state of the simulation
+  sim.outputFull("/tmp/slim_" + simID + ".txt"); 
+  
+  // pick random genome and add an m2 mutation in location 10,000
+  target = sample(p1.genomes, 1);
+  target.addNewDrawnMutation(m2, 10000);
+}
+
+// Check for simulation end conditions, max 100,000 generations
+1000:100000 late() {
+  // check that m2 mutation still exists
+  if (sim.getValue("finalGen")==T){
+    inds = sim.subpopulations.individuals; 
+    lines="index parent1 parent2\n";
+    for(ind in inds){
+      lines=c(lines,ind.pedigreeID,ind.pedigreeParentIDs,"\n");
+    }
+    file=paste(lines);
+    if (!writeFile("parent.txt", file))
+      stop("Error writing parent file.");
+    
+    // end simulation
+    sim.simulationFinished();    
+  }
+  else {
+    mut = sim.mutationsOfType(m2); 
+    if (size(mut) == 1) {
+      // count the number of individuals with at least one m2 mutation
+      inds = sim.subpopulations.individuals;
+      countHaveMut = sum(sapply(inds,"ifelse(applyValue.countOfMutationsOfType(m2)>0,1,0);"));
+      // if half the individuals possess at least one m2 mutation
+      if(countHaveMut/size(inds) >=0.5){  
+      // if m2 is halfway to fixation
+      //if(sim.mutationFrequencies(NULL, mut) >= 0.5){  
+        // print the current generation number
+        cat("Generation: " + sim.generation + "\n");
+        
+        // write output.txt file
+        // one row per individual in current generation containing their
+        // pedigree ID, genotype (0 if they don't have any m2 mutations, 1 otherwise), phenotype, and fitness
+        lines = "index geno pheno fit\n"; 
+        for (ind in inds){
+          lines = c(lines,ind.pedigreeID,asFloat(ind.countOfMutationsOfType(m2)>0),ind.getValue("phenotype1"),ind.fitnessScaling,"\n");
+        }
+        file = paste(lines);
+        if (!writeFile("output.txt", file))
+          stop("Error writing file.");
+        sim.setValue("finalGen", T);
+        
+      }
+    }
+    else
+    // mutation has been lost to drift, rerun from generation 1000
+    {
+      // print warning
+      cat(simID + ": LOST – RESTARTING\n");
+  
+      // go back to generation 1000
+      sim.readFromPopulationFile("/tmp/slim_" + simID + ".txt");
+      // start a newly seeded run
+      setSeed(rdunif(1, 0, asInteger(2^62) - 1));
+      // re-introduce the sweep mutation
+      target = sample(p1.genomes, 1);
+      target.addNewDrawnMutation(m2, 10000);
+    }
+  }
+} 
+
