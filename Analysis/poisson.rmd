@@ -1,0 +1,267 @@
+---
+title: Poisson regression and genetic effects on number of children
+author: Gibran Hemani
+---
+
+```{r}
+library(tidyverse)
+set.seed(31415)
+
+```
+
+## Baseline parameters
+
+```{r}
+# sample size
+n <- 100000
+
+# effect allele frequency
+eaf <- 0.3
+
+# genotype - diploid additive model
+g <- rbinom(n, size = 2, prob = eaf)
+```
+
+## Check things on the continuous scale
+
+Basic model:
+
+$$
+x_i = \alpha + \beta g_i + e_i
+$$
+
+where $g$ is binomially distributed of size 2 (i.e. diploid genotypes) where the effect allele frequency is $p$
+
+$$
+g \sim Binom(2, p)
+$$
+
+and the error term
+
+$$
+e \sim N(0, 1)
+$$
+
+Note that if we centre $g$ to have mean of 0 (i.e. $g - 2p$) then the $\alpha$ term disappears.
+
+We expect that the variance explained in $x$ by $g$ is
+
+$$
+h^2_x = 2 \beta^2 p (1-p) / var(x)
+$$
+
+Run a few simulations something on the simple continuous / liability scale:
+
+```{r}
+# Number of simulations
+nsim <- 100
+
+# Sample a SNP effect for each simulation
+b <- rnorm(nsim)
+```
+
+For each of the `r nsim` simulations 
+
+- Create an $x$ variable
+- Check that $h^2$ etc is as expected
+
+```{r}
+res <- lapply(b, function(B)
+{
+	# Generate x - the residual variance will be 1 given g
+	x <- rnorm(n, (g-mean(g)) * B, 1)
+	tibble(
+		b = B,
+		vx = var(x),                                # Estimate variance of x
+		r = cor(x, g),                              # Correlation between x and g
+		rsq = r^2,                                  # Variance explained in x by g
+		bhat = cov(x, g) / var(g),                  # Effect estimate of g on x
+		h2 = bhat^2 * 2 * eaf * (1-eaf) / var(x)    # Expected variance explained in x by g
+	)
+}) %>% bind_rows()
+```
+
+Check that estimated $\hat{\beta} \approx \beta$
+
+```{r}
+ggplot(res, aes(x = b, y = bhat)) +
+geom_point()
+```
+
+Check that estimated $\hat{R^2} \approx E(h^2_x)$
+
+```{r}
+ggplot(res, aes(x = rsq, y = h2)) +
+geom_point()
+```
+
+Check that variance in x changes with simulated $\beta$
+
+```{r}
+ggplot(res, aes(x = b, y = vx)) +
+geom_point()
+```
+
+## Generating genetic effects on count data
+
+To make a Poisson variable, for each individual $i$ the count is based on a $\lambda_i$ value that is related to the individual's genotype $g_i$ and the expected number of children $\alpha$
+
+$$
+\lambda_i = \alpha + \beta (g_i - 2p)
+$$
+
+In this regard, $\lambda_i$ is equivalent to the expected values of liability model depicted above as $x$. Then the number of children that an individual has is drawn by
+
+$$
+y_i \sim Pois(\lambda_i)
+$$
+
+e.g.
+
+```{r}
+# average number of kids per person
+a <- 2
+
+# genetic effect on number of children
+b <- 0.2
+
+# Generate liability
+lambdai <- a + b * (g - mean(g))
+
+# Number of kids
+y <- rpois(n, lambdai)
+```
+
+We expect the average number of kids by genotype to increment by `r b` per genotype value. On the liability scale:
+
+```{r}
+# lambda value by genotype
+tapply(lambdai, g, mean)
+```
+
+On the observed scale?
+
+```{r}
+tapply(y, g, mean)
+```
+
+Seems to work
+
+## Linear and generalised linear models
+
+Can we retrieve the simulated genetic effects through linear or Poisson regression
+
+```{r}
+b <- 0.2
+y <- rpois(n, 2 + b * (g-mean(g)))
+summary(lm(y ~ g))
+```
+
+This gives a pretty good estimate for the effect of $g$ on number of kids, but the intercept is off - because g is not centered. Can we retrieve?
+
+```{r}
+2 - 2 * eaf * b
+```
+
+What about Poisson regression
+
+```{r}
+mod <- summary(glm(y ~ g, family=poisson))
+mod
+```
+
+Poisson regression uses a natural log link function and the coefficients are estimated on the multiplicative scale rather than the additive scale used in the continuous/liability model. So can we retrieve the effects on the liability scale? Let's call the coefficients from the Poisson $b_0$ for the intercept and $b_1$ for the effect of $g$
+
+$$
+\beta = \exp(b_0) \times (e^{b_1} - 1)
+$$
+
+so the intercept:
+
+```{r}
+exp(coefficients(mod)[1,1])
+```
+
+and the effect estimate:
+
+```{r}
+exp(coefficients(mod)[1,1]) * (exp(coefficients(mod)[2,1]) - 1)
+```
+
+Run a few simulations to check
+
+
+```{r}
+nsim <- 100
+b <- rnorm(nsim, sd=0.1) # sample genetic effects for each simulation
+a <- runif(nsim, 2, 4) # mean kids range from 2 to 4
+
+res <- lapply(1:nsim, function(i)
+{
+	y <- rpois(n, a[i] + b[i] * (g-mean(g)))
+	mod1 <- lm(y ~ g)
+	mod2 <- glm(y ~ g, family=poisson)
+	tibble(
+		a = a[i],
+		b = b[i],
+		ahat1 = coefficients(mod1)[1],
+		ahat2 = coefficients(mod2)[1],
+		bhat1 = coefficients(mod1)[2],
+		bhat2 = coefficients(mod2)[2],
+		betahat2 = exp(ahat2) * (exp(bhat2) - 1)
+	)
+}) %>% bind_rows()
+```
+
+Linear model estimates vs true effects:
+
+```{r}
+ggplot(res, aes(x=b, y=bhat1)) +
+geom_point()
+```
+
+Poisson model estimates vs true effects:
+
+```{r}
+ggplot(res, aes(x=b, y=betahat2)) +
+geom_point()
+```
+
+Linear model vs Poisson model estimates:
+
+```{r}
+ggplot(res, aes(x=bhat1, y=betahat2)) +
+geom_point()
+```
+
+Ok so they look identical. Is there any value in doing the Poisson e.g. standard errors?
+
+```{r}
+nsim <- 100
+b <- c(rnorm(nsim/2, sd=0.1), rep(0, nsim/2)) # mixture of real and null effects
+a <- runif(100, 2, 4)
+
+res <- lapply(1:nsim, function(i)
+{
+	y <- rpois(n, a[i] + b[i] * (g-mean(g)))
+	mod1 <- summary(lm(y ~ g))
+	mod2 <- summary(glm(y ~ g, family=poisson))
+	tibble(
+		a = a[i],
+		b = b[i],
+		pval1 = coefficients(mod1)[2,4],
+		pval2 = coefficients(mod2)[2,4]
+	)
+}) %>% bind_rows()
+```
+
+Compare p-values - for null model want pvals to be uniformly distributed, for non-null model want smaller p-values
+
+```{r}
+ggplot(res, aes(x = pval1, y = pval2)) +
+geom_point() +
+facet_grid(. ~ b == 0)
+```
+
+Ok they are identical, so we can just use the linear model instead of Poisson?
+

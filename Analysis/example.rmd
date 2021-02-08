@@ -1,0 +1,50 @@
+---
+title: "Example of two sample MR"
+author: "Gibran Hemani"
+---
+  
+  Simulate data
+
+```{r}
+n <- 10000
+geno <- rbinom(n, 2, 0.3)
+
+u <- rnorm(n)
+x <- geno + rnorm(n) + u
+y <- u + 3 * x + rnorm(n)
+```
+
+estimate the effects of the snp on exposuyre and outcome
+
+```{r}
+mod1 <- summary(lm(x ~ geno))
+bgx <- coefficients(mod1)[2,1]
+segx <- coefficients(mod1)[2,2]
+
+mod2 <- summary(lm(y ~ geno))
+bgy <- coefficients(mod2)[2,1]
+segy <- coefficients(mod2)[2,2]
+```
+
+Compare observational
+
+```{r}
+# obs association
+lm(y ~ x)
+```
+
+against IV
+
+```{r}
+# iv estimate
+bgy / bgx
+```
+
+Using the TwoSampleMR package
+
+```{r}
+library(TwoSampleMR)
+
+# using twosamplemr to get se
+mr_wald_ratio(bgx, bgy, segx, segy)
+```

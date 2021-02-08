@@ -1,0 +1,131 @@
+---
+title: Test simulation of children
+author: Clare Horscroft
+---
+
+# Binary genotype
+
+Set parameters
+```{r}
+set.seed(827441)
+
+n<-100000
+b<-0.2
+```
+
+Simulate parents' genotype and fitness
+```{r}
+parents_geno<-sample(c(0,1),n,TRUE)
+parents_fitness<-1+b*(rnorm(n,0,1)+parents_geno)
+tapply(parents_fitness,parents_geno,mean)
+```
+
+For each child choose two parents
+```{r}
+child_parent_1<-sample(1:n,n,replace=TRUE,prob=parents_fitness)
+child_parent_2<-sample(1:n,n,replace=TRUE,prob=parents_fitness)
+```
+
+For each parent, count the number of children
+```{r}
+parents_no_children<-rep(0,n)
+tabParents<-table(c(child_parent_1,child_parent_2))
+parents_no_children[as.numeric(unlist(dimnames(tabParents)))]<-tabParents
+barplot(table(parents_no_children))
+```
+
+Mean number of childen by genotype
+```{r}
+mean_by_geno<-tapply(parents_no_children,parents_geno,mean)
+mean_by_geno
+```
+Difference is
+```{r}
+unname(mean_by_geno[2]-mean_by_geno[1])
+```
+
+geno = 1 divided by geno = 0 is
+```{r}
+unname(mean_by_geno[2]/mean_by_geno[1])
+```
+
+Create models
+```{r}
+mod1<-lm(parents_no_children~parents_geno)
+mod2<-glm(parents_no_children~parents_geno,family=poisson)
+
+#mod1
+mod1
+
+#mod2
+#intercept
+exp(mod2$coefficients[1])
+#slope
+exp(mod2$coefficients[1]) * (exp(mod2$coefficients[2]) - 1)
+```
+
+# Diploid genotype 
+
+Set parameters
+```{r}
+set.seed(827441)
+
+n<-100000
+b<-0.2
+```
+
+Simulate parents' genotype and fitness
+```{r}
+parents_geno<-sample(0:2,n,TRUE)
+parents_fitness<-1+b*(rnorm(n,0,1)+parents_geno)
+tapply(parents_fitness,parents_geno,mean)
+```
+
+For each child choose two parents
+```{r}
+child_parent_1<-sample(1:n,n,replace=TRUE,prob=parents_fitness)
+child_parent_2<-sample(1:n,n,replace=TRUE,prob=parents_fitness)
+```
+
+For each parent, count the number of children
+```{r}
+parents_no_children<-rep(0,n)
+tabParents<-table(c(child_parent_1,child_parent_2))
+parents_no_children[as.numeric(unlist(dimnames(tabParents)))]<-tabParents
+barplot(table(parents_no_children))
+```
+
+Mean number of childen by genotype
+```{r}
+mean_by_geno<-tapply(parents_no_children,parents_geno,mean)
+mean_by_geno
+```
+Difference is
+```{r}
+unname(c(mean_by_geno[2]-mean_by_geno[1],mean_by_geno[3]-mean_by_geno[2]))
+unname(mean_by_geno[3]-mean_by_geno[1])
+```
+
+Ratios are
+```{r}
+unname(c(mean_by_geno[2]/mean_by_geno[1],mean_by_geno[3]/mean_by_geno[2]))
+unname(mean_by_geno[3]/mean_by_geno[1])
+```
+
+Create models
+```{r}
+mod1<-lm(parents_no_children~parents_geno)
+mod2<-glm(parents_no_children~parents_geno,family=poisson)
+```
+linear model
+```{r}
+mod1
+```
+generalised linear model
+```{r}
+#intercept
+exp(mod2$coefficients[1])
+#slope
+exp(mod2$coefficients[1]) * (exp(mod2$coefficients[2]) - 1)
+```
+
