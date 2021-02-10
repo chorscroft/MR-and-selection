@@ -200,12 +200,13 @@ summary {
 
 n&lt;-100000
 b&lt;-0.2</code></pre>
-<p>Simulate parents' genotype and fitness</p>
+<p>Simulate parents' genotype and fitness.</p>
 <pre class="r"><code>parents_geno&lt;-sample(c(0,1),n,TRUE)
 parents_fitness&lt;-1+b*(rnorm(n,0,1)+parents_geno)
 tapply(parents_fitness,parents_geno,mean)</code></pre>
 <pre><code>##         0         1 
 ## 0.9994265 1.2003996</code></pre>
+<p>This table shows that parents without the mutation on average have a fitness close to 1, and those with a copy of the mutation have an average fitness around 1.2 (1+b) as expected.</p>
 <p>For each child choose two parents</p>
 <pre class="r"><code>child_parent_1&lt;-sample(1:n,n,replace=TRUE,prob=parents_fitness)
 child_parent_2&lt;-sample(1:n,n,replace=TRUE,prob=parents_fitness)</code></pre>
@@ -226,12 +227,14 @@ mean_by_geno</code></pre>
 <p>geno = 1 divided by geno = 0 is</p>
 <pre class="r"><code>unname(mean_by_geno[2]/mean_by_geno[1])</code></pre>
 <pre><code>## [1] 1.191704</code></pre>
-<p>Create models</p>
+<p>which is close to the fitness (1+b) as expected.</p>
+<div id="create-models" class="section level2">
+<h2>Create models</h2>
 <pre class="r"><code>mod1&lt;-lm(parents_no_children~parents_geno)
-mod2&lt;-glm(parents_no_children~parents_geno,family=poisson)
-
-#mod1
-mod1</code></pre>
+mod2&lt;-glm(parents_no_children~parents_geno,family=poisson)</code></pre>
+<div id="linear-model" class="section level3">
+<h3>linear model</h3>
+<pre class="r"><code>mod1</code></pre>
 <pre><code>## 
 ## Call:
 ## lm(formula = parents_no_children ~ parents_geno)
@@ -239,15 +242,26 @@ mod1</code></pre>
 ## Coefficients:
 ##  (Intercept)  parents_geno  
 ##       1.8236        0.3496</code></pre>
-<pre class="r"><code>#mod2
-#intercept
-exp(mod2$coefficients[1])</code></pre>
-<pre><code>## (Intercept) 
-##    1.823594</code></pre>
+<p>Dividing the slope by the intercept recovers the selection coefficient (b)</p>
+<pre class="r"><code>mod1$coefficients[2]/mod1$coefficients[1]</code></pre>
+<pre><code>## parents_geno 
+##    0.1917037</code></pre>
+</div>
+<div id="generalised-linear-model" class="section level3">
+<h3>generalised linear model</h3>
+<pre class="r"><code>#intercept
+glm_intercept&lt;-exp(mod2$coefficients[[1]])
+glm_intercept</code></pre>
+<pre><code>## [1] 1.823594</code></pre>
 <pre class="r"><code>#slope
-exp(mod2$coefficients[1]) * (exp(mod2$coefficients[2]) - 1)</code></pre>
-<pre><code>## (Intercept) 
-##   0.3495897</code></pre>
+glm_slope&lt;-exp(mod2$coefficients[[1]]) * (exp(mod2$coefficients[[2]]) - 1)
+glm_slope</code></pre>
+<pre><code>## [1] 0.3495897</code></pre>
+<p>Dividing the slope by the intercept recovers the selection coefficient (b)</p>
+<pre class="r"><code>glm_slope/glm_intercept</code></pre>
+<pre><code>## [1] 0.1917037</code></pre>
+</div>
+</div>
 </div>
 <div id="diploid-genotype" class="section level1">
 <h1>Diploid genotype</h1>
@@ -262,6 +276,7 @@ parents_fitness&lt;-1+b*(rnorm(n,0,1)+parents_geno)
 tapply(parents_fitness,parents_geno,mean)</code></pre>
 <pre><code>##         0         1         2 
 ## 0.9984528 1.1982867 1.4010518</code></pre>
+<p>This table shows that parents without the mutation on average have a fitness close to 1, and those with one copy of the mutation have an average fitness around 1.2 (1+b), and those with two copies have an average fitness of 1.4 (1+2b) as expected.</p>
 <p>For each child choose two parents</p>
 <pre class="r"><code>child_parent_1&lt;-sample(1:n,n,replace=TRUE,prob=parents_fitness)
 child_parent_2&lt;-sample(1:n,n,replace=TRUE,prob=parents_fitness)</code></pre>
@@ -286,10 +301,13 @@ mean_by_geno</code></pre>
 <pre><code>## [1] 1.201220 1.167429</code></pre>
 <pre class="r"><code>unname(mean_by_geno[3]/mean_by_geno[1])</code></pre>
 <pre><code>## [1] 1.402338</code></pre>
-<p>Create models</p>
+<p>which is close to the fitness (1+b) as expected. Each mutations means a 0.2 higher proportion of children. People with two copies of the mutation have 1.4 times the amount of children on average than people with no mutations.</p>
+<div id="create-models-1" class="section level2">
+<h2>Create models</h2>
 <pre class="r"><code>mod1&lt;-lm(parents_no_children~parents_geno)
 mod2&lt;-glm(parents_no_children~parents_geno,family=poisson)</code></pre>
-<p>linear model</p>
+<div id="linear-model-1" class="section level3">
+<h3>linear model</h3>
 <pre class="r"><code>mod1</code></pre>
 <pre><code>## 
 ## Call:
@@ -298,15 +316,26 @@ mod2&lt;-glm(parents_no_children~parents_geno,family=poisson)</code></pre>
 ## Coefficients:
 ##  (Intercept)  parents_geno  
 ##       1.6660        0.3351</code></pre>
-<p>generalised linear model</p>
+<p>Dividing the slope by the intercept recovers the selection coefficient (b)</p>
+<pre class="r"><code>mod1$coefficients[2]/mod1$coefficients[1]</code></pre>
+<pre><code>## parents_geno 
+##    0.2011658</code></pre>
+</div>
+<div id="generalised-linear-model-1" class="section level3">
+<h3>generalised linear model</h3>
 <pre class="r"><code>#intercept
-exp(mod2$coefficients[1])</code></pre>
-<pre><code>## (Intercept) 
-##    1.675456</code></pre>
+glm_intercept&lt;-exp(mod2$coefficients[[1]])
+glm_intercept</code></pre>
+<pre><code>## [1] 1.675456</code></pre>
 <pre class="r"><code>#slope
-exp(mod2$coefficients[1]) * (exp(mod2$coefficients[2]) - 1)</code></pre>
-<pre><code>## (Intercept) 
-##   0.3070578</code></pre>
+glm_slope&lt;-exp(mod2$coefficients[[1]]) * (exp(mod2$coefficients[[2]]) - 1)
+glm_slope</code></pre>
+<pre><code>## [1] 0.3070578</code></pre>
+<p>Dividing the slope by the intercept recovers the selection coefficient (b)</p>
+<pre class="r"><code>glm_slope/glm_intercept</code></pre>
+<pre><code>## [1] 0.1832682</code></pre>
+</div>
+</div>
 </div>
 
 

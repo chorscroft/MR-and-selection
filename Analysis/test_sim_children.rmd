@@ -13,12 +13,13 @@ n<-100000
 b<-0.2
 ```
 
-Simulate parents' genotype and fitness
+Simulate parents' genotype and fitness.
 ```{r}
 parents_geno<-sample(c(0,1),n,TRUE)
 parents_fitness<-1+b*(rnorm(n,0,1)+parents_geno)
 tapply(parents_fitness,parents_geno,mean)
 ```
+This table shows that parents without the mutation on average have a fitness close to 1, and those with a copy of the mutation have an average fitness around 1.2 (1+b) as expected.
 
 For each child choose two parents
 ```{r}
@@ -48,20 +49,34 @@ geno = 1 divided by geno = 0 is
 ```{r}
 unname(mean_by_geno[2]/mean_by_geno[1])
 ```
+which is close to the fitness (1+b) as expected.
 
-Create models
+## Create models
 ```{r}
 mod1<-lm(parents_no_children~parents_geno)
 mod2<-glm(parents_no_children~parents_geno,family=poisson)
-
-#mod1
+```
+### linear model
+```{r}
 mod1
+```
+Dividing the slope by the intercept recovers the selection coefficient (b)
+```{r}
+mod1$coefficients[2]/mod1$coefficients[1]
+```
 
-#mod2
+### generalised linear model
+```{r}
 #intercept
-exp(mod2$coefficients[1])
+glm_intercept<-exp(mod2$coefficients[[1]])
+glm_intercept
 #slope
-exp(mod2$coefficients[1]) * (exp(mod2$coefficients[2]) - 1)
+glm_slope<-exp(mod2$coefficients[[1]]) * (exp(mod2$coefficients[[2]]) - 1)
+glm_slope
+```
+Dividing the slope by the intercept recovers the selection coefficient (b)
+```{r}
+glm_slope/glm_intercept
 ```
 
 # Diploid genotype 
@@ -80,6 +95,7 @@ parents_geno<-sample(0:2,n,TRUE)
 parents_fitness<-1+b*(rnorm(n,0,1)+parents_geno)
 tapply(parents_fitness,parents_geno,mean)
 ```
+This table shows that parents without the mutation on average have a fitness close to 1, and those with one copy of the mutation have an average fitness around 1.2 (1+b), and those with two copies have an average fitness of 1.4 (1+2b) as expected.
 
 For each child choose two parents
 ```{r}
@@ -111,21 +127,32 @@ Ratios are
 unname(c(mean_by_geno[2]/mean_by_geno[1],mean_by_geno[3]/mean_by_geno[2]))
 unname(mean_by_geno[3]/mean_by_geno[1])
 ```
+which is close to the fitness (1+b) as expected. Each mutations means a 0.2 higher proportion of children. People with two copies of the mutation have 1.4 times the amount of children on average than people with no mutations.
 
-Create models
+## Create models
 ```{r}
 mod1<-lm(parents_no_children~parents_geno)
 mod2<-glm(parents_no_children~parents_geno,family=poisson)
 ```
-linear model
+### linear model
 ```{r}
 mod1
 ```
-generalised linear model
+Dividing the slope by the intercept recovers the selection coefficient (b)
 ```{r}
-#intercept
-exp(mod2$coefficients[1])
-#slope
-exp(mod2$coefficients[1]) * (exp(mod2$coefficients[2]) - 1)
+mod1$coefficients[2]/mod1$coefficients[1]
 ```
 
+### generalised linear model
+```{r}
+#intercept
+glm_intercept<-exp(mod2$coefficients[[1]])
+glm_intercept
+#slope
+glm_slope<-exp(mod2$coefficients[[1]]) * (exp(mod2$coefficients[[2]]) - 1)
+glm_slope
+```
+Dividing the slope by the intercept recovers the selection coefficient (b)
+```{r}
+glm_slope/glm_intercept
+```
