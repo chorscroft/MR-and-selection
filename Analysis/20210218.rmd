@@ -1,0 +1,209 @@
+---
+title: "Intercept, heritability, lambda"
+output: html_notebook
+---
+
+
+The liability scale follows a standard linear model
+
+$$
+l_i = \beta_0 + \beta_1 g_{1,i} + \beta_2 g_{2,i} + e_i
+$$
+This is transformed to the expected data scale
+
+$$
+\nu_i = g^{-1}(l_i)
+$$
+where the function $g()$ is the link function, which in the Poisson case is the natural $log$. Therefore, the expected data scale will be the exponential transformation of the liability.
+
+Finally, the actual number of counts is a random sample drawn with
+
+$$
+z_i = D(\nu_i)
+$$
+
+Create 1000 genotypes for 10000 individuals
+
+```{r}
+library(dplyr)
+nid <- 10000
+nsnp <- 1000
+af <- runif(nsnp)
+h2 <- 0.8
+g <- lapply(1:nsnp, function(x) rbinom(nid, 2, af[x])) %>% do.call(cbind, .)
+```
+
+Generate true effect sizes for a trait with some known heritability
+
+```{r}
+sigmag <- sqrt(2 * af * (1-af))
+b <- rnorm(nsnp, mean=0, sd=sigmag)
+```
+
+Scale effects to be on a liability scale that will result in an exponential distribution of mean 2 and variance 2
+
+$$
+\mu_l = ln \left (\frac{\mu_\nu^2}{\sqrt{\mu_\nu^2+\sigma_\nu^2}} \right ) - \sum^M 2p_j\beta_j
+$$
+and
+
+$$
+\sigma^2_l = ln \left ( 1 + \frac{\sigma^2_\nu}{\mu^2_\nu} \right )
+$$
+
+```{r}
+mu <- log(2^2 / sqrt(2^2 + 2^2)) - sum(2*af*b)
+sigmal <- sqrt(log(1+2^2/2^2))
+
+vg <- sum(af * 2 * (1 - af) * b^2)
+ve <- (vg - h2 * vg)/h2
+vy <- vg + ve
+b <- b/sqrt(vy) * sigmal
+hist(b)
+sd(b)
+```
+
+Generate liability
+
+```{r}
+gbv <- g %*% b
+l <- mu + gbv + rnorm(nid, 0, sqrt(sigmal^2 * (1-h2)))
+cor(gbv, l)^2
+```
+
+```{r}
+nu <- exp(l)
+mean(nu)
+sd(nu)
+hist(nu, breaks=100)
+```
+
+Transform to observed distribution
+
+Sample counts
+
+```{r}
+y <- rpois(nid, nu)
+barplot(table(y))
+```
+
+```{r}
+mod1 <- lm(y ~ g)
+mod2 <- lm(l ~ g)
+plot(coefficients((mod1))[-1] ~ b)
+plot(coefficients((mod2))[-1] ~ b)
+summary(lm(coefficients(mod1)[-1] ~ b))
+```
+
+```{r}
+simulate <- function(h2, nsnp, nid, nkids)
+{
+  af <- runif(nsnp)
+  g <- lapply(1:nsnp, function(x) rbinom(nid, 2, af[x])) %>% do.call(cbind, .)
+  sigmag <- sqrt(2 * af * (1-af))
+  b <- rnorm(nsnp, mean=0, sd=sigmag)
+  vg <- sum(af * 2 * (1 - af) * b^2)
+  ve <- (vg - h2 * vg)/h2
+  vy <- vg + ve
+  b <- b/sqrt(vy) * sigmal
+  mu <- log(nkids^2 / sqrt(nkids^2 + nkids^2)) - sum(2*af*b)
+  sigmal <- sqrt(log(1+nkids^2/nkids^2))
+  gbv <- g %*% b
+  l <- mu + gbv + rnorm(nid, 0, sqrt(sigmal^2 * (1-h2)))
+  nu <- exp(l)
+  y <- rpois(nid, nu)
+  mod <- sapply(1:nsnp, function(x) lm(y ~ g[,x])$coef[2])
+  return(lm(mod ~ b)$coef[2])
+}
+
+param <- expand.grid(
+  h2=c(0.1, 0.3, 0.5, 0.7, 0.9),
+  nkids=c(2,3),
+  nsnp=c(500),
+  sim=c(1:3),
+  nid=10000
+)
+
+for(i in 1:nrow(param))
+{
+  message(i)
+  param$coef[i] <- simulate(param$h2[i], param$nsnp[i], param$nid[i], param$nkids[i])
+}
+```
+
+
+```{r}
+str(param)
+library(ggplot2)
+ggplot(param, aes(h2, coef)) +
+  geom_point(aes(colour=nkids))
+```
+
+
+## Reconciling `sample` vs `rpois`
+
+I think that once the liability is exponentiated then drawing numbers of children from the poisson, or using it as a probability in sample is going to be the same.
+
+
+```{r}
+nsnp <- 1000
+nid <- 10000
+nkids <- 2
+h2 <- 0.8
+
+# sample allele frequencies
+af <- runif(nsnp)
+
+# generate genotypes
+g <- lapply(1:nsnp, function(x) rbinom(nid, 2, af[x])) %>% do.call(cbind, .)
+
+# generate effect sizes
+sigmag <- sqrt(2 * af * (1-af))
+b <- rnorm(nsnp, mean=0, sd=sigmag)
+vg <- sum(af * 2 * (1 - af) * b^2)
+ve <- (vg - h2 * vg)/h2
+vy <- vg + ve
+b <- b/sqrt(vy) * sigmal
+
+# mean of liability should scale to nkids once exponentiated
+mu <- log(nkids^2 / sqrt(nkids^2 + nkids^2)) - sum(2*af*b)
+
+# variance of liability should scale to nkids once exponentiated
+sigmal <- sqrt(log(1+nkids^2/nkids^2))
+
+# generate liability (fitness)
+gbv <- g %*% b
+l <- mu + gbv + rnorm(nid, 0, sqrt(sigmal^2 * (1-h2)))
+
+# transform to observed scale
+nu <- exp(l)
+
+# sample counts by drawing from poisson
+y1 <- rpois(nid, nu)
+
+# sample counts by assigning children using sample
+child_parent <- sample(1:nid, nkids*nid, replace=TRUE, prob=nu)
+y2 <- rep(0,nid)
+tabParents <- table(child_parent)
+y2[as.numeric(unlist(dimnames(tabParents)))] <- tabParents
+
+# estimate effects of each SNP on poisson y
+mod1 <- sapply(1:nsnp, function(x) lm(y1 ~ g[,x])$coef[2])
+
+# estimate effects of each SNP on sample y
+mod2 <- sapply(1:nsnp, function(x) lm(y2 ~ g[,x])$coef[2])
+
+# how do the SNP effect estimates compare across the two models?
+plot(mod1 ~ mod2)
+```
+
+The estimated effects should by proportional to the simulated effects on the liability scale, but need to be divided by the mean number of kids per person
+
+```{r}
+plot(mod1/nkids ~ b)
+```
+
+```{r}
+lm(mod1/nkids ~ b)
+```
+
