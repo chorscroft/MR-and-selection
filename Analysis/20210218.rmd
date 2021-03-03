@@ -1,6 +1,8 @@
 ---
 title: "Intercept, heritability, lambda"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 
@@ -52,7 +54,6 @@ $$
 $$
 
 ```{r}
-mu <- log(2^2 / sqrt(2^2 + 2^2)) - sum(2*af*b)
 sigmal <- sqrt(log(1+2^2/2^2))
 
 vg <- sum(af * 2 * (1 - af) * b^2)
@@ -61,6 +62,8 @@ vy <- vg + ve
 b <- b/sqrt(vy) * sigmal
 hist(b)
 sd(b)
+
+mu <- log(2^2 / sqrt(2^2 + 2^2)) - sum(2*af*b)
 ```
 
 Generate liability
@@ -157,6 +160,9 @@ af <- runif(nsnp)
 # generate genotypes
 g <- lapply(1:nsnp, function(x) rbinom(nid, 2, af[x])) %>% do.call(cbind, .)
 
+# variance of liability should scale to nkids once exponentiated
+sigmal <- sqrt(log(1+nkids^2/nkids^2))
+
 # generate effect sizes
 sigmag <- sqrt(2 * af * (1-af))
 b <- rnorm(nsnp, mean=0, sd=sigmag)
@@ -167,9 +173,6 @@ b <- b/sqrt(vy) * sigmal
 
 # mean of liability should scale to nkids once exponentiated
 mu <- log(nkids^2 / sqrt(nkids^2 + nkids^2)) - sum(2*af*b)
-
-# variance of liability should scale to nkids once exponentiated
-sigmal <- sqrt(log(1+nkids^2/nkids^2))
 
 # generate liability (fitness)
 gbv <- g %*% b
