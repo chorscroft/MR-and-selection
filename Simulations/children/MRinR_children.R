@@ -1,14 +1,15 @@
 require(systemfit)
 
 ################################################################
-## Basic simulation, 0.05(0.01)
+## Basic simulation, 0.05
 ################################################################
-setwd("~/Bristol/Simulations/children")
+setwd("~/Documents/MR-and-selection/Simulations/children")
 
-dat<-read.table("output.txt",header = TRUE)
-par<-read.table("parent.txt",header = TRUE)
-
-dat$children<-sapply(dat$index,function(x) sum(par$parent1==x | par$parent2==x))
+dat<-read.table("dat.txt",header = TRUE)
+table(dat$geno)
+tapply(dat$pheno,dat$geno,mean)
+tapply(dat$fit,dat$geno,mean)
+tapply(dat$children,dat$geno,mean)
 
 sf<-systemfit(fit~pheno,inst = ~geno,method = "2SLS",data=dat)
 summary(sf)
