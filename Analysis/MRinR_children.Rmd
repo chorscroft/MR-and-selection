@@ -12,26 +12,26 @@ require(systemfit)
 require(TwoSampleMR)
 ```
 
+# Basic simulation
+
 ## Read in the Data
 Get the SLiM data from the "children" simualation output.txt and put it into the "dat" data frame.
 Get the parent ID for all the children in the next generation from parent.txt and put it into the par data frame
 
 ```{r}
-setwd("~/Bristol/MR-and-selection/Simulations/children")
-dat<-read.table("output.txt",header = TRUE)
-par<-read.table("parent.txt",header = TRUE)
+setwd("~/Documents/MR-and-selection/Simulations/children")
+dat<-read.table("dat.txt",header = TRUE)
 ```
 
-## Check the fitness of the individuals is as expected (0.05 higher for geno = 1)
+## Check the fitness of the individuals is as expected (0.05 higher for each allele)
 ```{r}
 tapply(dat$fit,dat$geno,mean)
 ```
 
 ## Get number of children
-Calculate the number of children each individual had and add it as an extra column in the dat data frame
+Look at the mean number of children per genotype
 
 ```{r}
-dat$children<-sapply(dat$index,function(x) sum(par$parent1==x)+sum(par$parent2==x))
 tapply(dat$children,dat$geno,mean)
 ```
 
@@ -105,5 +105,95 @@ segy<-mod2$coefficients[2,2]
 mr_wald_ratio(bgx,bgy,segx,segy)
 ```
 
+# Simulation with large n
 
+```{r}
+setwd("~/Documents/MR-and-selection/Simulations/children/children_large_n/")
+large_dat<-read.table("dat.txt",header = TRUE)
+```
 
+## Check the fitness of the individuals is as expected (0.05 higher for each allele)
+```{r}
+tapply(large_dat$fit,large_dat$geno,mean)
+```
+
+## Get number of children
+Look at the mean number of children per genotype
+
+```{r}
+tapply(large_dat$children,large_dat$geno,mean)
+```
+
+## Calculate fitness estimate using 2SLS method in systemfit
+
+```{r}
+sf<-systemfit(children~pheno,inst = ~geno,method = "2SLS",data=large_dat)
+summary(sf)
+```
+Firstly, start by running using a normal linear model:
+
+```{r}
+mod1<-summary(lm(large_dat$pheno~large_dat$geno))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(lm(large_dat$children~large_dat$geno))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+mr_wald_ratio(bgx,bgy,segx,segy)
+```
+
+Now try changing the lm to a glm with a Poisson family distribution:
+
+```{r}
+mod1<-summary(lm(large_dat$pheno~large_dat$geno))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(glm(large_dat$children~large_dat$geno,family=poisson("log")))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+mr_wald_ratio(bgx,bgy,segx,segy)
+```
+
+# Multiple simulations
+
+# For each simulation, extract the final wald ratio
+
+```{r}
+setwd("~/Documents/MR-and-selection/Simulations/children/multisim/")
+effectEsts<-rep(0,1000)
+standardErrs<-rep(0,1000)
+for (i in 1:1000){
+  temp_dat<-read.table(paste0("sim_",i,"/dat.txt"),header = TRUE)
+  mod1<-summary(lm(temp_dat$pheno~temp_dat$geno))
+  bgx<-mod1$coefficients[2,1]
+  segx<-mod1$coefficients[2,2]
+  mod2<-summary(glm(temp_dat$children~temp_dat$geno,family=poisson("log")))
+  bgy<-mod2$coefficients[2,1]
+  segy<-mod2$coefficients[2,2]
+  wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+  effectEsts[i]<-wr$b
+  standardErrs[i]<-wr$se
+}
+```
+
+## Summarise causal effect estimates
+
+```{r}
+summary(effectEsts)
+```
+
+## Histogram of effect estimates
+
+```{r}
+hist(effectEsts, main="Effect estimates over 1,000 simulations")
+```
+
+## on average, how many standard errors away from the true value?
+
+```{r}
+seaway<-(effectEsts-0.05)/standardErrs
+hist(seaway)
+summary(seaway)
+mean(abs(seaway))
+sum(abs(seaway)<2)/1000
+```
