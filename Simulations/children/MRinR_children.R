@@ -11,8 +11,13 @@ tapply(dat$pheno,dat$geno,mean)
 tapply(dat$fit,dat$geno,mean)
 tapply(dat$children,dat$geno,mean)
 
-sf<-systemfit(fit~pheno,inst = ~geno,method = "2SLS",data=dat)
+sf<-systemfit(log(fit)~pheno,inst = ~geno,method = "2SLS",data=dat)
 summary(sf)
 
-sf_children<-systemfit(children~pheno,inst = ~geno,method = "2SLS",data=dat)
-summary(sf_children)
+mod1<-summary(lm(dat$pheno~dat$geno))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(glm(dat$children~dat$geno,family=poisson("log")))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+mr_wald_ratio(bgx,bgy,segx,segy)
