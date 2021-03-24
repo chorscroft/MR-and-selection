@@ -25,7 +25,7 @@ dat<-read.table("dat.txt",header = TRUE)
 
 ## Check the fitness of the individuals is as expected (0.05 higher for each allele)
 ```{r}
-tapply(dat$fit,dat$geno,mean)
+tapply(log(dat$fit),dat$geno,mean)
 ```
 
 ## Get number of children
@@ -51,6 +51,13 @@ barplot(table(dat$children),main="Number of children",xlab="Number of children",
 ```
 
 ## Does the number of children follow a Poisson distribution?
+
+Are the mean and variance similar?
+```{r}
+mean(dat$children)
+var(dat$children)
+```
+
 Here is the graph again with the poisson distribution overlayed on top/next to it:
 
 ```{r}
@@ -76,7 +83,7 @@ chiPois<-c(chiPois,10000-sum(chiPois))
 chisq.test(rbind(chiChild,chiPois))
 ```
 
-The chi-sqaured test did not show eveidence to reject the null hypothesis (that the distributions are not different)
+The chi-sqaured test did not show evidence to reject the null hypothesis (that the distributions are not different)
 
 ## Two Sample MR method
 
@@ -114,7 +121,7 @@ large_dat<-read.table("dat.txt",header = TRUE)
 
 ## Check the fitness of the individuals is as expected (0.05 higher for each allele)
 ```{r}
-tapply(large_dat$fit,large_dat$geno,mean)
+tapply(log(large_dat$fit),large_dat$geno,mean)
 ```
 
 ## Get number of children
