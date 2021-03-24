@@ -45,7 +45,7 @@ fitness(m2) {
 
   // set fitness as 1, adjusted for phenotype1 where one unit corresponds
   // to a 0.05 uplift in fitness, plus noise (0.01 SD)
-  inds.fitnessScaling = 1+phenotype1*0.05+rnorm(1000000,0,0.01);
+  inds.fitnessScaling = exp(1+phenotype1*0.05+rnorm(1000000,0,0.01));
 } 
 
 // in generation 1000 introduce a beneficial mutation into a random genome
@@ -114,7 +114,7 @@ fitness(m2) {
     // mutation has been lost to drift, rerun from generation 1000
     {
       // print warning
-      cat(simID + ": LOST – RESTARTING\n");
+      cat(simID + ": LOST â€“ RESTARTING\n");
   
       // go back to generation 1000
       sim.readFromPopulationFile("/tmp/slim_" + simID + ".txt");
