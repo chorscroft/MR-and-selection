@@ -1,0 +1,63 @@
+---
+title: "MR interpretation"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+# require package
+require(TwoSampleMR)
+
+# set seed
+#set.seed(743187210)
+
+# one million individuals
+n<-1000000
+
+# six snps
+g1<-sample(c(0:2),n,TRUE)
+g2<-sample(c(0:2),n,TRUE)
+g3<-sample(c(0:2),n,TRUE)
+g4<-sample(c(0:2),n,TRUE)
+g5<-sample(c(0:2),n,TRUE)
+g6<-sample(c(0:2),n,TRUE)
+
+# phenotype increases by one unit for each mutation
+p1<-g1+g2+g3+g4+g5+g6+rnorm(n,0,1)
+
+# fitness increases by 0.1 for each phenotypic unit
+b<-0.1
+fit<-1+b*p1+rnorm(n,0,0.01)
+
+# MR on fitness
+mod1<-summary(lm(p1~g1+g2+g3+g4+g5+g6))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(lm(fit~g1+g2+g3+g4+g5+g6))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+mr_wald_ratio(bgx,bgy,segx,segy)
+```
+
+Fitness increases by b for every phenotypic unit.
+
+```{r}
+# get number of children
+child_parent_1 <- sample(1:n, n, replace=TRUE, prob=exp(fit))
+child_parent_2 <- sample(1:n, n, replace=TRUE, prob=exp(fit))
+parents_no_children<-rep(0,n)
+tabParents<-table(c(child_parent_1,child_parent_2))
+parents_no_children[as.numeric(unlist(dimnames(tabParents)))]<-tabParents
+
+# MR on number of children
+mod1<-summary(lm(p1~g1+g2+g3+g4+g5+g6))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(glm(parents_no_children~g1+g2+g3+g4+g5+g6,family=poisson("log")))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+mr_wald_ratio(bgx,bgy,segx,segy)
+```
+
+b is close to 0.1 as expected given the exponentiated liability function.
