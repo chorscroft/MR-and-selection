@@ -1,0 +1,18 @@
+// Initial random seed:
+2095838602993
+
+// RunInitializeCallbacks():
+initializeSLiMOptions(keepPedigrees = T);
+initializeMutationRate(1e-07);
+initializeMutationType(1, 0, "f", 0);
+initializeMutationType(2, 0, "f", 0);
+initializeMutationType(3, 0, "f", 0);
+initializeMutationType(4, 0, "f", 0);
+initializeGenomicElementType(1, m1, 1);
+initializeGenomicElement(g1, 0, 99999);
+initializeRecombinationRate(c(1e-08, 0.5, 1e-08, 0.5, 1e-08, 0.5, 1e-08, 0.5, 1e-08, 0.5, 1e-08, 0.5, 1e-08), c(9999, 10000, 19999, 20000, 29999, 30000, 39999, 40000, 49999, 50000, 59999, 60000, 99999));
+
+// Starting run at generation <start>:
+1 
+
+Generation: 2019
