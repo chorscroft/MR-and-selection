@@ -1,0 +1,75 @@
+---
+title: "Analysis over multiple generations"
+author: "Clare Horscroft"
+date: "30/03/2021"
+output: html_document
+---
+
+What happens if a mutation stops being selected for? 20 generations of individuals are simulated in each scenario. In each scenario, the selection stops in a different generation.
+
+Load packages
+```{r}
+require(TwoSampleMR)
+```
+
+Use the Wald ratio to get the Biv estimate and standard error for each scenario and each generation
+```{r}
+
+b_mat<-matrix(NA,20,20)
+se_mat<-matrix(NA,20,20)
+for (s in 1:20){
+  setwd(paste0("~/Documents/MR-and-selection/Simulations/children/multigen/selStop_gen_",s))
+  for (g in 0:19){
+    dat<-read.table(paste0("dat_",g,".txt"),header = TRUE)
+    mod1<-summary(lm(dat$pheno~dat$geno))
+    bgx<-mod1$coefficients[2,1]
+    segx<-mod1$coefficients[2,2]
+    mod2<-summary(glm(dat$children~dat$geno,family=poisson("log")))
+    bgy<-mod2$coefficients[2,1]
+    segy<-mod2$coefficients[2,2]
+    mrw<-mr_wald_ratio(bgx,bgy,segx,segy)
+    b_mat[s,g+1]<-mrw$b
+    se_mat[s,g+1]<-mrw$se
+  }
+}
+```
+
+Plot the scenarios
+```{r}
+cols<-rainbow(20)
+plot(c(1:20),b_mat[1,],type="l",ylim=c(-0.04,0.08),col=cols[1])
+for (i in 2:20){
+  lines(c(1:20),b_mat[i,],col=cols[i])
+}
+```
+
+Compare selection coefficients the generation before selection ended and the generation after selection ended
+
+```{r}
+box_data<-data.frame(gen=rep(NA,400),b=rep(NA,400))
+for(i in 1:20){
+  box_data$gen[(i-1)*20+c(1:20)]<-(1-i):(20-i)
+  box_data$b[(i-1)*20+c(1:20)]<-b_mat[i,]
+}
+boxplot(box_data$b[abs(box_data$gen)<=10]~box_data$gen[abs(box_data$gen)<=10],xlab="Generations since phenotype stopped being selected for",ylab="Estimated selection coefficient")
+abline(h=0.05,lty=2,col="red")
+abline(h=0,lty=2,col="blue")
+```
+
+```{r}
+plot(1:19,box_data$b[box_data$gen==1])
+sel<-1:19
+summary(lm(box_data$b[box_data$gen==1]~sel))
+```
+
+```{r}
+plot(1:18,box_data$b[box_data$gen==2])
+sel<-1:18
+summary(lm(box_data$b[box_data$gen==2]~sel))
+```
+
+```{r}
+plot(1:17,box_data$b[box_data$gen==3])
+sel<-1:17
+summary(lm(box_data$b[box_data$gen==3]~sel))
+```
