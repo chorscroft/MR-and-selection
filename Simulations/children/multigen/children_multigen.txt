@@ -103,12 +103,12 @@ fitness(m2) {
         // one row per individual in current generation containing their
         // pedigree ID, genotype, phenotype, and fitness
         lines = "index geno pheno fit"; 
-        if (!writeFile("output.txt", lines))
+        if (!writeFile(paste0("output_"+sim.getValue("curr_gen")+".txt"), lines))
             stop("Error writing file.");
 
         for (ind in inds){
           lines = paste(c(asString(ind.pedigreeID),ind.countOfMutationsOfType(m2),ind.getValue("phenotype1"),ind.fitnessScaling));
-          if (!writeFile("output.txt", lines, append=T))
+          if (!writeFile(paste0("output_"+sim.getValue("curr_gen")+".txt"), lines, append=T))
             stop("Error writing file.");
         }
            
