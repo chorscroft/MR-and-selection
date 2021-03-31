@@ -5,7 +5,7 @@
 
 **/output*.txt
 **/parent.txt
-**/dat.txt
+**/dat*.txt
 
 Simulations/children/multisim/*/children.txt
 
