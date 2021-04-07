@@ -11,6 +11,13 @@ require(systemfit)
 require(TwoSampleMR)
 require(ggdag)
 require(dagitty)
+require(jsonlite)
+```
+
+Get file path
+```{r}
+config <- read_json("~/config.json")
+mr_sel_path <- config$mr_sel_path
 ```
 
 # Two phenotypes and seven genes
@@ -46,8 +53,7 @@ ggdag(dag, layout = "circle",node_size = 20, text_size = 2.7) +
 ```
 
 ```{r}
-setwd("~/Documents/MR-and-selection/Simulations/children/two_pheno_7_gene/")
-dat<-read.table("dat.txt",header = TRUE)
+dat<-read.table(paste0(mr_sel_path,"/Simulations/children/two_pheno_7_gene/dat.txt"),header = TRUE)
 ```
 
 ## MR analysis

@@ -1,11 +1,13 @@
 require(systemfit)
+require(jsonlite)
+config <- read_json("~/config.json")
+mr_sel_path <- config$mr_sel_path
 
 ################################################################
 ## Two phenotype simulation, 0.05, -0.03, additive
 ################################################################
-setwd("~/Documents/MR-and-selection/Simulations/two_pheno/")
 
-dat<-read.table("output.txt",header = TRUE)
+dat<-read.table(paste0(mr_sel_path,"/Simulations/two_pheno/output.txt"),header = TRUE)
 table(dat$geno)
 tapply(dat$pheno1,dat$geno,mean)
 tapply(dat$pheno2,dat$geno,mean)

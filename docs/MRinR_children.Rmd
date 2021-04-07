@@ -10,6 +10,13 @@ Load the systemfit and TwoSampleMR packages
 ```{r}
 require(systemfit)
 require(TwoSampleMR)
+require(jsonlite)
+```
+
+Get file path
+```{r}
+config <- read_json("~/config.json")
+mr_sel_path <- config$mr_sel_path
 ```
 
 # Basic simulation
@@ -19,8 +26,7 @@ Get the SLiM data from the "children" simualation output.txt and put it into the
 Get the parent ID for all the children in the next generation from parent.txt and put it into the par data frame
 
 ```{r}
-setwd("~/Documents/MR-and-selection/Simulations/children")
-dat<-read.table("dat.txt",header = TRUE)
+dat<-read.table(paste0(mr_sel_path,"/Simulations/children/dat.txt"),header = TRUE)
 ```
 
 ## Check the fitness of the individuals is as expected (0.05 higher for each allele)

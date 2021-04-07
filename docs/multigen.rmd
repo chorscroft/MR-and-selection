@@ -10,6 +10,13 @@ What happens if a mutation stops being selected for? 20 generations of individua
 Load packages
 ```{r}
 require(TwoSampleMR)
+require(jsonlite)
+```
+
+Get file path
+```{r}
+config <- read_json("~/config.json")
+mr_sel_path <- config$mr_sel_path
 ```
 
 Use the Wald ratio to get the Biv estimate and standard error for each scenario and each generation
@@ -18,7 +25,7 @@ Use the Wald ratio to get the Biv estimate and standard error for each scenario 
 b_mat<-matrix(NA,20,20)
 se_mat<-matrix(NA,20,20)
 for (s in 1:20){
-  setwd(paste0("~/Documents/MR-and-selection/Simulations/children/multigen/selStop_gen_",s))
+  setwd(paste0(mr_sel_path,"/Simulations/children/multigen/selStop_gen_",s))
   for (g in 0:19){
     dat<-read.table(paste0("dat_",g,".txt"),header = TRUE)
     mod1<-summary(lm(dat$pheno~dat$geno))
