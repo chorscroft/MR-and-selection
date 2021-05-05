@@ -43,9 +43,14 @@ fitness(m2) {
     i=i+1;
   }
 
-  // set fitness as 1, adjusted for phenotype1 where one unit corresponds
-  // to a 0.05 uplift in fitness, plus noise (0.01 SD)
-  inds.fitnessScaling = exp(1+phenotype1*0.05+rnorm(10000,0,0.01));
+  // stop selection at given generation
+  if (sim.getValue("curr_gen")>=10){
+    inds.fitnessScaling = exp(1+rnorm(10000,0,0.01));
+  } else {
+    // set fitness as 1, adjusted for phenotype1 where one unit corresponds
+    // to a 0.05 uplift in fitness, plus noise (0.01 SD)
+    inds.fitnessScaling = exp(1+phenotype1*0.05+rnorm(10000,0,0.01));
+  }
 } 
 
 // in generation 1000 introduce a beneficial mutation into a random genome
