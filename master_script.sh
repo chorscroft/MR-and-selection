@@ -53,9 +53,6 @@ cd $mr_sel_path/Simulations/children/two_pheno_7_gene_large
 slim children_2p7g_large.txt > o.txt
 Rscript $mr_sel_path/Simulations/children/createdatfile.R $PWD
 
-
-
-
 ## Run the children simulation with two phenotypes caused by one gene
 
 cd $mr_sel_path/Simulations/children/two_pheno_one_gene
@@ -63,14 +60,19 @@ slim children_2p1g.txt > o.txt
 Rscript $mr_sel_path/Simulations/children/createdatfile.R $PWD
 
 ## multi generational sim
-for i in {1..20}
+## Selection stops after 10 generations
+## run sim 100 times 
+for i in {1..100}
 do
-	cd $mr_sel_path/Simulations/children/multigen/selStop_gen_$i
-	slim children_multigen_$i.txt > o.txt
+	mkdir $mr_sel_path/Simulations/children/multigen/selStop_sim_$i
+	cp children_multigen.txt $mr_sel_path/Simulations/children/multigen/selStop_sim_$i/
+	cd $mr_sel_path/Simulations/children/multigen/selStop_sim_$i
+	slim children_multigen.txt > o.txt
 	for g in {0..19}
 	do
 		Rscript $mr_sel_path/Simulations/children/createdatfile.R $PWD output_$g.txt output_$((g+1)).txt dat_$g.txt
 	done
+	cd ..
 done
 
 
