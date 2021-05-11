@@ -75,6 +75,17 @@ do
 	cd ..
 done
 
+## Get grandchildren information for each of the simulations for each generation
+for i in {1..100}
+do
+	cd $mr_sel_path/Simulations/children/multigen/selStop_sim_$i
+	for g in {0..18}
+	do
+		Rscript $mr_sel_path/Simulations/children/createdatfile_gc.R $PWD dat_$g.txt dat_$((g+1)).txt dat_gc_$g.txt
+	done
+	cd ..
+done
+
 
 
 #### IN PROGRESS
