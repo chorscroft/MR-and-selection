@@ -5,7 +5,7 @@ date: "17/05/2021"
 output: html_document
 ---
 
-Investigations into grandchildren, with a selection strength of 0.12
+Investigations into grandchildren, with a selection strength of 0.12, output when allele present in 50% of the population
 
 Use the first generation from the multigen simulations to get grandchildren information
 

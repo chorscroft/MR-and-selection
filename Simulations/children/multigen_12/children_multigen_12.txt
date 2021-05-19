@@ -99,8 +99,8 @@ fitness(m2) {
       inds = sim.subpopulations.individuals;
       countHaveMut = sum(sapply(inds,"ifelse(applyValue.countOfMutationsOfType(m2)>0,1,0);"));
 
-      // if two-thirds of the individuals possess at least one m2 mutation
-      if(countHaveMut/size(inds) >=0.66){  
+      // if half of the individuals possess at least one m2 mutation
+      if(countHaveMut/size(inds) >=0.5){  
         // print the current generation number
         cat("Generation: " + sim.generation + "\n");
 
