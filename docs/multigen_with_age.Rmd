@@ -381,15 +381,19 @@ box<-data.frame(b=c(sba_b[[1]][1,],sba_b[[2]][1,],sba_b[[3]][1,],sba_b[[4]][1,],
 for (i in 2:100){
   box<-rbind(box,data.frame(b=c(sba_b[[1]][i,],sba_b[[2]][i,],sba_b[[3]][i,],sba_b[[4]][i,],sba_b[[5]][i,]),sim=i,dec=rep(1:25,5),age=rep(c(3:7),each=25)))
 }
-boxplot(b~age+dec,data = box,col=c("grey0","grey25","grey50","grey75","grey100"),xaxt="n")
+boxplot(b~age+dec,data = box,col=c("grey0","grey25","grey50","grey75","grey100"),xaxt="n",xlab="Decade",ylab="Estimated selection strength")
 axis(side = 1, at = seq(3,123,5),labels = c(1:25))
-legend("topright", fill = c("grey0","grey25","grey50","grey75","grey100"), legend = c(3:7))
+legend("topright", fill = c("grey0","grey25","grey50","grey75","grey100"), legend = seq(30,70,10))
+abline(h=0.05,lty=2,col="red")
+abline(h=0,lty=2,col="blue")
 
 # dec 8-17
 box_817<-box[box$dec>=8 & box$dec<=17,]
-boxplot(b~age+dec,data = box_817,col=c("grey0","grey25","grey50","grey75","grey100"),xaxt="n")
+boxplot(b~age+dec,data = box_817,col=c("grey0","grey25","grey50","grey75","grey100"),xaxt="n",xlab="Decade",ylab="Estimated selection strength")
 axis(side = 1, at = seq(3,48,5),labels = c(8:17))
-legend("topright", fill = c("grey0","grey25","grey50","grey75","grey100"), legend = c(3:7))
+legend("topright", fill = c("grey0","grey25","grey50","grey75","grey100"), legend = seq(30,70,10),)
+abline(h=0.05,lty=2,col="red")
+abline(h=0,lty=2,col="blue")
 ```
 
 Recovering selection
