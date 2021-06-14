@@ -1,5 +1,5 @@
 // Initial random seed:
-1652830554528
+2170555837864
 
 // RunInitializeCallbacks():
 initializeSLiMOptions(keepPedigrees = T);

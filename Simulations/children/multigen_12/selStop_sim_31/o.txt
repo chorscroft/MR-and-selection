@@ -1,5 +1,5 @@
 // Initial random seed:
-2591260043183
+2114645262611
 
 // RunInitializeCallbacks():
 initializeSLiMOptions(keepPedigrees = T);
@@ -13,4 +13,5 @@ initializeRecombinationRate(1e-08);
 // Starting run at generation <start>:
 1 
 
-Generation: 1081
+2114645262611: LOST – RESTARTING
+Generation: 1062
