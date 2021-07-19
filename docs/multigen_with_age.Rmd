@@ -1,0 +1,408 @@
+---
+title: "Multiple generations with age structure"
+author: "Clare Horscroft"
+date: "05/05/2021"
+output: html_document
+---
+
+Create a population with an age structure. Ages represent decades. There will always be an equal number of people in each age bracket. 7 is the max age. Reproduction only happens in ages 2-4.
+
+# Selection strength = 0.05
+
+```{r}
+require(TwoSampleMR)
+```
+
+Initial population set up:
+```{r}
+N<-100000
+age<-rep(c(0:7),each=N/8)
+genotype<-sample(c(0,1,2),N,T)
+phenotype<-genotype+rnorm(N,0,1)
+fitness<-exp(1+phenotype*0.05+rnorm(N,0,0.01))
+nochildren<-rep(0,N)
+```
+
+10 decade burn-in
+```{r}
+for (dec in 1:10){
+  #only ages 2-4 can have children
+  child_fit<-fitness
+  child_fit[age<=1 | age >=5]<-0
+  parents<-sample(1:N,N/4,T,prob=child_fit)
+  tabParents <- table(parents)
+  newchildren<-rep(0,N)
+  newchildren[as.numeric(unlist(dimnames(tabParents)))] <-tabParents
+  nochildren<-nochildren+newchildren
+  
+  # get the genotype of the children based on the parents' genotypes
+  newgeno<-rep(0,N/8)
+  for(i in 1:(N/8)){
+    p1<-genotype[parents[i*2-1]]
+    p2<-genotype[parents[i*2]]
+    if (p1==2){
+      newgeno[i]<-newgeno[i]+1
+    } else if (p1==1){
+      newgeno[i]<-newgeno[i]+sample(c(0,1),1)
+    }
+    if (p2==2){
+      newgeno[i]<-newgeno[i]+1
+    } else if (p2==1){
+      newgeno[i]<-newgeno[i]+sample(c(0,1),1)
+    }
+  }
+  # get phenotype and fitness for the child given the genotype
+  newpheno<-newgeno+rnorm(N/8,0,1)
+  newfitness<-exp(1+newpheno*0.05+rnorm(N/8,0,0.01))
+  
+  ## iterate population 
+  # age stays the same as the same amount of people are born as die, and all other information shifts along
+  genotype<-c(newgeno,genotype[-c((N-N/8+1):N)])
+  phenotype<-c(newpheno,phenotype[-c((N-N/8+1):N)])
+  fitness<-c(newfitness,fitness[-c((N-N/8+1):N)])
+  nochildren<-c(rep(0,N/8),nochildren[-c((N-N/8+1):N)])
+}
+```
+
+Overall effect estimate
+```{r}
+mod1<-summary(lm(phenotype[age>=3]~genotype[age>=3]))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(glm(nochildren[age>=3]~genotype[age>=3],family=poisson("log")))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+wr
+```
+
+split by age
+```{r}
+effectbyage<-rep(0,5)
+for(a in 3:7){
+  mod1<-summary(lm(phenotype[age==a]~genotype[age==a]))
+  bgx<-mod1$coefficients[2,1]
+  segx<-mod1$coefficients[2,2]
+  mod2<-summary(glm(nochildren[age==a]~genotype[age==a],family=poisson("log")))
+  bgy<-mod2$coefficients[2,1]
+  segy<-mod2$coefficients[2,2]
+  wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+  effectbyage[a-2]<-wr$b
+}
+effectbyage
+```
+
+Adjusting for age
+```{r}
+mod1<-summary(lm(phenotype[age>=3]~genotype[age>=3]+age[age>=3]))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(glm(nochildren[age>=3]~genotype[age>=3]+age[age>=3],family=poisson("log")))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+wr
+```
+
+# Selection pressures removed
+
+What happens if the selection pressure is removed after 10 more decades?
+
+```{r}
+oee_b<-rep(0,25)
+oee_se<-rep(0,25)
+sba_b<-matrix(0,5,25)
+sba_se<-matrix(0,5,25)
+afa_b<-rep(0,25)
+afa_se<-rep(0,25)
+
+for (dec in 1:25){
+  #only ages 2-4 can have children
+  child_fit<-fitness
+  child_fit[age<=1 | age >=5]<-0
+  parents<-sample(1:N,N/4,T,prob=child_fit)
+  tabParents <- table(parents)
+  newchildren<-rep(0,N)
+  newchildren[as.numeric(unlist(dimnames(tabParents)))] <-tabParents
+  nochildren<-nochildren+newchildren
+  
+  # get the genotype of the children based on the parents' genotypes
+  newgeno<-rep(0,N/8)
+  for(i in 1:(N/8)){
+    p1<-genotype[parents[i*2-1]]
+    p2<-genotype[parents[i*2]]
+    if (p1==2){
+      newgeno[i]<-newgeno[i]+1
+    } else if (p1==1){
+      newgeno[i]<-newgeno[i]+sample(c(0,1),1)
+    }
+    if (p2==2){
+      newgeno[i]<-newgeno[i]+1
+    } else if (p2==1){
+      newgeno[i]<-newgeno[i]+sample(c(0,1),1)
+    }
+  }
+  # get phenotype and fitness for the child given the genotype
+  newpheno<-newgeno+rnorm(N/8,0,1)
+  if(dec<10){ # At generation 10, selection pressure stops
+  newfitness<-exp(1+newpheno*0.05+rnorm(N/8,0,0.01))
+  } else {
+    newfitness<-exp(1+rnorm(N/8,0,0.01))
+  }
+  
+  # Selection pressure stops
+  if (dec==10){
+      fitness<-exp(log(fitness)-phenotype*0.05)
+  }
+  ## iterate population 
+  # age stays the same as the same amount of people are born as die, and all other information shifts along
+  genotype<-c(newgeno,genotype[-c((N-N/8+1):N)])
+  phenotype<-c(newpheno,phenotype[-c((N-N/8+1):N)])
+  fitness<-c(newfitness,fitness[-c((N-N/8+1):N)])
+  nochildren<-c(rep(0,N/8),nochildren[-c((N-N/8+1):N)])
+  
+  # Overall effect estimate
+  mod1<-summary(lm(phenotype[age>=3]~genotype[age>=3]))
+  bgx<-mod1$coefficients[2,1]
+  segx<-mod1$coefficients[2,2]
+  mod2<-summary(glm(nochildren[age>=3]~genotype[age>=3],family=poisson("log")))
+  bgy<-mod2$coefficients[2,1]
+  segy<-mod2$coefficients[2,2]
+  wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+  oee_b[dec]<-wr$b
+  oee_se[dec]<-wr$se
+
+  # Split by age
+  for(a in 3:7){
+    mod1<-summary(lm(phenotype[age==a]~genotype[age==a]))
+    bgx<-mod1$coefficients[2,1]
+    segx<-mod1$coefficients[2,2]
+    mod2<-summary(glm(nochildren[age==a]~genotype[age==a],family=poisson("log")))
+    bgy<-mod2$coefficients[2,1]
+    segy<-mod2$coefficients[2,2]
+    wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+    sba_b[a-2,dec]<-wr$b
+    sba_se[a-2,dec]<-wr$se
+  }
+  
+  # Adjusting for age
+  mod1<-summary(lm(phenotype[age>=3]~genotype[age>=3]+age[age>=3]))
+  bgx<-mod1$coefficients[2,1]
+  segx<-mod1$coefficients[2,2]
+  mod2<-summary(glm(nochildren[age>=3]~genotype[age>=3]+age[age>=3],family=poisson("log")))
+  bgy<-mod2$coefficients[2,1]
+  segy<-mod2$coefficients[2,2]
+  wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+  afa_b[dec]<-wr$b
+  afa_se[dec]<-wr$se
+}
+```
+
+Plot selection estimates
+```{r}
+plot(1:25,oee_b,type="n",ylim=c(min(oee_b-1.96*oee_se,afa_b-1.96*afa_se),max(oee_b+1.96*oee_se,afa_b+1.96*afa_se)),xaxs="i",xlab="Decades",ylab="Selection strength")
+polygon(x=c(1:25,25:1),y=c(afa_b+afa_se*1.96,rev(afa_b-afa_se*1.96)),col="lightblue",density = 10,border="lightblue",lty=2)
+polygon(x=c(1:25,25:1),y=c(oee_b+oee_se*1.96,rev(oee_b-oee_se*1.96)),col="lightpink",density = 10,border="lightpink",angle=-45)
+abline(h=0.05)
+abline(h=0)
+lines(1:25,oee_b,col="red")
+lines(1:25,afa_b,col="blue",lty=2)
+legend("topright",legend=c("Overall estimate","Age adjusted"),lty=c(1,2),col=c("red","blue"))
+```
+
+Plot split by age
+```{r}
+plot(1:25,sba_b[1,],type="l",col=1)
+lines(1:25,sba_b[2,],col=2)
+lines(1:25,sba_b[3,],col=3)
+lines(1:25,sba_b[4,],col=4)
+lines(1:25,sba_b[5,],col=5)
+legend("topright",legend=c(3,4,5,6,7),col=c(1:5),lty=1)
+
+```
+
+# Repeat simulation 100 times
+
+```{r}
+  
+oee_b<-matrix(0,100,25)
+oee_se<-matrix(0,100,25)
+sba_b<-list(matrix(0,100,25),matrix(0,100,25),matrix(0,100,25),matrix(0,100,25),matrix(0,100,25))
+sba_se<-list(matrix(0,100,25),matrix(0,100,25),matrix(0,100,25),matrix(0,100,25),matrix(0,100,25))
+afa_b<-matrix(0,100,25)
+afa_se<-matrix(0,100,25)
+
+for (sim in 1:100){
+  N<-100000
+  age<-rep(c(0:7),each=N/8)
+  genotype<-sample(c(0,1,2),N,T)
+  phenotype<-genotype+rnorm(N,0,1)
+  fitness<-exp(1+phenotype*0.05+rnorm(N,0,0.01))
+  nochildren<-rep(0,N)
+  
+  # 10 decade burn-in
+  
+  for (dec in 1:10){
+    #only ages 2-4 can have children
+    child_fit<-fitness
+    child_fit[age<=1 | age >=5]<-0
+    parents<-sample(1:N,N/4,T,prob=child_fit)
+    tabParents <- table(parents)
+    newchildren<-rep(0,N)
+    newchildren[as.numeric(unlist(dimnames(tabParents)))] <-tabParents
+    nochildren<-nochildren+newchildren
+    
+    # get the genotype of the children based on the parents' genotypes
+    newgeno<-rep(0,N/8)
+    for(i in 1:(N/8)){
+      p1<-genotype[parents[i*2-1]]
+      p2<-genotype[parents[i*2]]
+      if (p1==2){
+        newgeno[i]<-newgeno[i]+1
+      } else if (p1==1){
+        newgeno[i]<-newgeno[i]+sample(c(0,1),1)
+      }
+      if (p2==2){
+        newgeno[i]<-newgeno[i]+1
+      } else if (p2==1){
+        newgeno[i]<-newgeno[i]+sample(c(0,1),1)
+      }
+    }
+    # get phenotype and fitness for the child given the genotype
+    newpheno<-newgeno+rnorm(N/8,0,1)
+    newfitness<-exp(1+newpheno*0.05+rnorm(N/8,0,0.01))
+    
+    ## iterate population 
+    # age stays the same as the same amount of people are born as die, and all other information shifts along
+    genotype<-c(newgeno,genotype[-c((N-N/8+1):N)])
+    phenotype<-c(newpheno,phenotype[-c((N-N/8+1):N)])
+    fitness<-c(newfitness,fitness[-c((N-N/8+1):N)])
+    nochildren<-c(rep(0,N/8),nochildren[-c((N-N/8+1):N)])
+  }
+  
+  # next 25 decades
+  
+  for (dec in 1:25){
+    #only ages 2-4 can have children
+    child_fit<-fitness
+    child_fit[age<=1 | age >=5]<-0
+    parents<-sample(1:N,N/4,T,prob=child_fit)
+    tabParents <- table(parents)
+    newchildren<-rep(0,N)
+    newchildren[as.numeric(unlist(dimnames(tabParents)))] <-tabParents
+    nochildren<-nochildren+newchildren
+    
+    # get the genotype of the children based on the parents' genotypes
+    newgeno<-rep(0,N/8)
+    for(i in 1:(N/8)){
+      p1<-genotype[parents[i*2-1]]
+      p2<-genotype[parents[i*2]]
+      if (p1==2){
+        newgeno[i]<-newgeno[i]+1
+      } else if (p1==1){
+        newgeno[i]<-newgeno[i]+sample(c(0,1),1)
+      }
+      if (p2==2){
+        newgeno[i]<-newgeno[i]+1
+      } else if (p2==1){
+        newgeno[i]<-newgeno[i]+sample(c(0,1),1)
+      }
+    }
+    # get phenotype and fitness for the child given the genotype
+    newpheno<-newgeno+rnorm(N/8,0,1)
+    if(dec<10){ # At generation 10, selection pressure stops
+    newfitness<-exp(1+newpheno*0.05+rnorm(N/8,0,0.01))
+    } else {
+      newfitness<-exp(1+rnorm(N/8,0,0.01))
+    }
+    
+    # Selection pressure stops
+    if (dec==10){
+        fitness<-exp(log(fitness)-phenotype*0.05)
+    }
+    ## iterate population 
+    # age stays the same as the same amount of people are born as die, and all other information shifts along
+    genotype<-c(newgeno,genotype[-c((N-N/8+1):N)])
+    phenotype<-c(newpheno,phenotype[-c((N-N/8+1):N)])
+    fitness<-c(newfitness,fitness[-c((N-N/8+1):N)])
+    nochildren<-c(rep(0,N/8),nochildren[-c((N-N/8+1):N)])
+    
+    # Overall effect estimate
+    mod1<-summary(lm(phenotype[age>=3]~genotype[age>=3]))
+    bgx<-mod1$coefficients[2,1]
+    segx<-mod1$coefficients[2,2]
+    mod2<-summary(glm(nochildren[age>=3]~genotype[age>=3],family=poisson("log")))
+    bgy<-mod2$coefficients[2,1]
+    segy<-mod2$coefficients[2,2]
+    wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+    oee_b[sim,dec]<-wr$b
+    oee_se[sim,dec]<-wr$se
+  
+    # Split by age
+    for(a in 3:7){
+      mod1<-summary(lm(phenotype[age==a]~genotype[age==a]))
+      bgx<-mod1$coefficients[2,1]
+      segx<-mod1$coefficients[2,2]
+      mod2<-summary(glm(nochildren[age==a]~genotype[age==a],family=poisson("log")))
+      bgy<-mod2$coefficients[2,1]
+      segy<-mod2$coefficients[2,2]
+      wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+      sba_b[[a-2]][sim,dec]<-wr$b
+      sba_se[[a-2]][sim,dec]<-wr$se
+    }
+    
+    # Adjusting for age
+    mod1<-summary(lm(phenotype[age>=3]~genotype[age>=3]+age[age>=3]))
+    bgx<-mod1$coefficients[2,1]
+    segx<-mod1$coefficients[2,2]
+    mod2<-summary(glm(nochildren[age>=3]~genotype[age>=3]+age[age>=3],family=poisson("log")))
+    bgy<-mod2$coefficients[2,1]
+    segy<-mod2$coefficients[2,2]
+    wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+    afa_b[sim,dec]<-wr$b
+    afa_se[sim,dec]<-wr$se
+  }
+}
+```
+
+Plot overall effect estimate and adjusted by age
+```{r}
+box<-data.frame(b=c(oee_b[1,],afa_b[1,]),sim=1,dec=rep(1:25,2),dat=rep(c("oee","afa"),each=25))
+for (i in 2:100){
+  box<-rbind(box,data.frame(b=c(oee_b[i,],afa_b[i,]),sim=i,dec=rep(1:25,2),dat=rep(c("oee","afa"),each=25)))
+}
+boxplot(b~dat+dec,data = box,col=c("red","blue"),xaxt="n")
+axis(side = 1, at = seq(1.5,49.5,2),labels = c(1:25))
+legend("topright", fill = c("red","blue"), legend = c("oee","afa"))
+```
+Plot split by age
+```{r}
+box<-data.frame(b=c(sba_b[[1]][1,],sba_b[[2]][1,],sba_b[[3]][1,],sba_b[[4]][1,],sba_b[[5]][1,]),sim=1,dec=rep(1:25,5),age=rep(c(3:7),each=25))
+for (i in 2:100){
+  box<-rbind(box,data.frame(b=c(sba_b[[1]][i,],sba_b[[2]][i,],sba_b[[3]][i,],sba_b[[4]][i,],sba_b[[5]][i,]),sim=i,dec=rep(1:25,5),age=rep(c(3:7),each=25)))
+}
+boxplot(b~age+dec,data = box,col=c("grey0","grey25","grey50","grey75","grey100"),xaxt="n",xlab="Decade",ylab="Estimated selection strength")
+axis(side = 1, at = seq(3,123,5),labels = c(1:25))
+legend("topright", fill = c("grey0","grey25","grey50","grey75","grey100"), legend = seq(30,70,10))
+abline(h=0.05,lty=2,col="red")
+abline(h=0,lty=2,col="blue")
+
+# dec 8-17
+box_817<-box[box$dec>=8 & box$dec<=17,]
+boxplot(b~age+dec,data = box_817,col=c("grey0","grey25","grey50","grey75","grey100"),xaxt="n",xlab="Decade",ylab="Estimated selection strength")
+axis(side = 1, at = seq(3,48,5),labels = c(8:17))
+legend("topright", fill = c("grey0","grey25","grey50","grey75","grey100"), legend = seq(30,70,10),)
+abline(h=0.05,lty=2,col="red")
+abline(h=0,lty=2,col="blue")
+```
+
+Recovering selection
+
+Using the decades data should mean that the original selection strength is recoverable. For example, in decade 13. The selection strength should be around a third for age 6 and two-thirds for age 7
+```{r}
+#age 7
+mean(sba_b[[5]][,13])*3/2
+#age 6
+mean(sba_b[[4]][,13])*3
+
+```

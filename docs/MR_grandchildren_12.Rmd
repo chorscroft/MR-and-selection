@@ -1,0 +1,183 @@
+---
+title: "MR with grandchildren, selection strength 0.12"
+author: "Clare Horscroft"
+date: "17/05/2021"
+output: html_document
+---
+
+Investigations into grandchildren, with a selection strength of 0.12, output when allele present in 50% of the population
+
+Use the first generation from the multigen simulations to get grandchildren information
+
+```{r, get_path}
+require(TwoSampleMR)
+require(jsonlite)
+config <- read_json("~/config.json")
+mr_sel_path <- config$mr_sel_path
+```
+
+Get data
+
+```{r, get_data}
+dat<-read.table(paste0(mr_sel_path,"/Simulations/children/multigen_12/selStop_sim_1/dat_gc_0.txt"),header = TRUE)
+hist(dat$grandchildren)
+```
+
+MR analysis for children and grandchildren from all sims over all generations
+
+```{r, mr}
+b_c_mat<-matrix(NA,100,19)
+se_c_mat<-matrix(NA,100,19)
+b_gc_mat<-matrix(NA,100,19)
+se_gc_mat<-matrix(NA,100,19)
+for (s in 1:100){
+  setwd(paste0(mr_sel_path,"/Simulations/children/multigen_12/selStop_sim_",s))
+  for (g in 0:18){
+    dat<-read.table(paste0("dat_gc_",g,".txt"),header = TRUE)
+    mod1<-summary(lm(dat$pheno~dat$geno))
+    bgx<-mod1$coefficients[2,1]
+    segx<-mod1$coefficients[2,2]
+    mod2<-summary(glm(dat$children~dat$geno,family=poisson("log")))
+    bgy<-mod2$coefficients[2,1]
+    segy<-mod2$coefficients[2,2]
+    mrw<-mr_wald_ratio(bgx,bgy,segx,segy)
+    mod3<-summary(glm(dat$grandchildren~dat$geno,family=poisson("log")))
+    bgygc<-mod3$coefficients[2,1]
+    segygc<-mod3$coefficients[2,2]
+    mrwgc<-mr_wald_ratio(bgx,bgygc,segx,segygc)
+    b_c_mat[s,g+1]<-mrw$b
+    se_c_mat[s,g+1]<-mrw$se
+    b_gc_mat[s,g+1]<-mrwgc$b
+    se_gc_mat[s,g+1]<-mrwgc$se
+  }
+}
+```
+
+box plot for children
+
+```{r, box_child}
+boxplot(b_c_mat,xlab="Generations",ylab="Estimated selection strength")
+abline(h=0.12,lty=2,col="red")
+abline(h=0,lty=2,col="blue")
+```
+
+box plot for grandchildren
+
+```{r, box_grandchild}
+boxplot(b_gc_mat,xlab="Generations",ylab="Estimated selection strength")
+abline(h=0.18,lty=2,col="green")
+abline(h=0.12,lty=2,col="red")
+abline(h=0,lty=2,col="blue")
+```
+
+Generation means
+
+```{r, means}
+apply(b_gc_mat,2,mean)
+```
+
+The selection strength is estimated as 1.5 times the actual selection strength when using grandchildren. This is because the beneficial allele is passed down through multiple generations.
+
+If the selection strength is b, and the beneficial allele is a:
+
+In generation 0 (grandparents):
+
+AA: Fitness = 1
+
+Aa: Fitness = 1 + b
+
+aa: Fitness = 1 + 2b
+
+
+Difference between the groups is b. This is the additional fitness for children for each allele.
+
+The fitness in terms of grandchildren per allele also depends on the likelihood of passing on the beneficial allele:
+
+AA: Fitness = 1 + 0 (no chance of passing on allele a) = 1
+
+Aa: Fitness = 1 + b + 0.5*b (half a chance of passing on allele a) = 1 + 1.5b
+
+aa: Fitness = 1 + 2b + b (Definitely will pass on allele a) = 1 + 3b
+
+
+Difference between the groups is 1.5b. This is the additional fitness for grandchildren for each allele.
+
+# Is the estimate using grandparents more precise?
+
+```{r, precision}
+box<-list()
+for(i in 1:19){
+ box[[2*i-1]]<-se_c_mat[,i]
+ box[[2*i]]<-se_gc_mat[,i]
+}
+boxplot(box,col=c("red","blue"),ylim=c(0.005,0.012),ylab="Standard error",xlab="Generation",xaxt="n")
+axis(1,at=seq(1.5,37.5,2),1:19)
+legend("bottom",horiz = TRUE,legend=c("child","grandchild"),fill=c("red","blue"))
+```
+
+The standard error is much smaller in each generation for the grandchild estimates, meaning the precision is greater. However, number of grandchildren is hard to ascertain.
+
+## Just grandparents with at least one child
+
+Can we use imputed parents for the UKBioBank participants? Will this bias the data as we will only have information for imputed parents who have had at least one child (the UKBioBank participant)
+
+```{r, mr_gc}
+b_c_mat_1<-matrix(NA,100,19)
+se_c_mat_1<-matrix(NA,100,19)
+b_gc_mat_1<-matrix(NA,100,19)
+se_gc_mat_1<-matrix(NA,100,19)
+for (s in 1:100){
+  setwd(paste0(mr_sel_path,"/Simulations/children/multigen_12/selStop_sim_",s))
+  for (g in 0:18){
+    dat<-read.table(paste0("dat_gc_",g,".txt"),header = TRUE)
+    dat<-dat[dat$children>0,]
+    mod1<-summary(lm(dat$pheno~dat$geno))
+    bgx<-mod1$coefficients[2,1]
+    segx<-mod1$coefficients[2,2]
+    mod2<-summary(glm(dat$children~dat$geno,family=poisson("log")))
+    bgy<-mod2$coefficients[2,1]
+    segy<-mod2$coefficients[2,2]
+    mrw<-mr_wald_ratio(bgx,bgy,segx,segy)
+    mod3<-summary(glm(dat$grandchildren~dat$geno,family=poisson("log")))
+    bgygc<-mod3$coefficients[2,1]
+    segygc<-mod3$coefficients[2,2]
+    mrwgc<-mr_wald_ratio(bgx,bgygc,segx,segygc)
+    b_c_mat_1[s,g+1]<-mrw$b
+    se_c_mat_1[s,g+1]<-mrw$se
+    b_gc_mat_1[s,g+1]<-mrwgc$b
+    se_gc_mat_1[s,g+1]<-mrwgc$se
+  }
+}
+
+```
+
+box plot for grandchildren where they had at least one child
+
+```{r, box_gc}
+boxplot(b_gc_mat_1,xlab="Generations",ylab="Estimated selection strength")
+abline(h=0.18,lty=2,col="green")
+abline(h=0.12,lty=2,col="red")
+abline(h=0,lty=2,col="blue")
+```
+
+Generation means
+
+```{r, means_gc}
+apply(b_gc_mat_1,2,mean)
+```
+
+Estimates using parents with at least one child
+
+```{r, box_par}
+boxplot(b_c_mat_1,xlab="Generations",ylab="Estimated selection strength")
+abline(h=0.12,lty=2,col="red")
+abline(h=0,lty=2,col="blue")
+```
+
+Generation means
+
+```{r, means_par}
+apply(b_c_mat_1,2,mean)
+```
+
+This shows the result would be biased without including grandparents with no children.

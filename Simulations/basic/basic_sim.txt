@@ -3,8 +3,8 @@
 // Initialise simulation parameters
 initialize() {
    initializeMutationRate(1e-7);                // contstant mutation rate
-   initializeMutationType("m1", 0.5, "f", 0.0); // neutral mutation
-   initializeMutationType("m2", 0.5, "f", 0.0); // introduced selected mutation
+   initializeMutationType("m1", 0.0, "f", 0.0); // neutral mutation
+   initializeMutationType("m2", 0.0, "f", 0.0); // introduced selected mutation
    m2.convertToSubstitution = F;                // remember m2 even after it fixes
    initializeGenomicElementType("g1", m1, 1.0); // in g1 elements, mutations are always type m1 (neutral)
    initializeGenomicElement(g1, 0, 99999);      // create a g1 100,000 bp long
@@ -30,15 +30,19 @@ fitness(m2) {
 1: late() {
   // get individuals
   inds = sim.subpopulations.individuals; 
+  
+  // set phenotype1 as standard normal. Add 1 phenotype unit for each m2 variant present in either genome
+  phenotype1 = rnorm(10000,0,1)+inds.countOfMutationsOfType(m2);
+  i=0;
   for (ind in inds){
-    // set phenotype1 as standard normal. Add 1 phenotype unit if m2 is present in either genome
-    phenotype1 = rnorm(1,0,1)+ifelse(ind.countOfMutationsOfType(m2)>0,1,0);
-    ind.setValue("phenotype1",phenotype1); 
-    // set fitness as 1, adjusted for phenotype1 where one unit corresponds
-    // to a 0.05 uplift in fitness on average (0.01 SD)
-    ind.fitnessScaling = 1+phenotype1*rnorm(1,0.05,0.01);
+    ind.setValue("phenotype1",phenotype1[i]);
+    i=i+1;
   }
-} 
+
+  // set fitness as 1, adjusted for phenotype1 where one unit corresponds
+  // to a 0.05 uplift in fitness, plus noise (0.01 SD)
+  inds.fitnessScaling = 1+phenotype1*0.05+rnorm(10000,0,0.01);
+}     
 
 // in generation 1000 introduce a beneficial mutation into a random genome
 // save the simulation in case the mutation is immediately lost
@@ -59,23 +63,24 @@ fitness(m2) {
     // count the number of individuals with at least one m2 mutation
     inds = sim.subpopulations.individuals;
     countHaveMut = sum(sapply(inds,"ifelse(applyValue.countOfMutationsOfType(m2)>0,1,0);"));
-    // if half the individuals possess at least one m2 mutation
-    if(countHaveMut/size(inds) >=0.5){  
-    // if m2 is halfway to fixation
-    //if(sim.mutationFrequencies(NULL, mut) >= 0.5){  
+
+    // if two-thirds of the individuals possess at least one m2 mutation
+    if(countHaveMut/size(inds) >=0.66){  
       // print the current generation number
       cat("Generation: " + sim.generation + "\n");
-      
+
       // write output.txt file
       // one row per individual in current generation containing their
-      // index ID, genotype (0 if they don't have any m2 mutations, 1 otherwise), phenotype, and fitness
-      lines = "index geno pheno fit\n"; 
+      // index ID, genotype, phenotype, and fitness
+      lines = "index geno pheno fit"; 
+      if (!writeFile("output.txt", lines))
+          stop("Error writing file.");
+
       for (ind in inds){
-        lines = c(lines,ind.index,asFloat(ind.countOfMutationsOfType(m2)>0),ind.getValue("phenotype1"),ind.fitnessScaling,"\n");
+        lines = paste(c(ind.index,ind.countOfMutationsOfType(m2),ind.getValue("phenotype1"),ind.fitnessScaling));
+        if (!writeFile("output.txt", lines, append=T))
+          stop("Error writing file.");
       }
-      file = paste(lines);
-      if (!writeFile("output.txt", file))
-        stop("Error writing file.");
          
       // end simulation
       sim.simulationFinished();    
@@ -85,7 +90,7 @@ fitness(m2) {
   // mutation has been lost to drift, rerun from generation 1000
   {
     // print warning
-    cat(simID + ": LOST – RESTARTING\n");
+    cat(simID + ": LOST â€“ RESTARTING\n");
 
     // go back to generation 1000
     sim.readFromPopulationFile("/tmp/slim_" + simID + ".txt");

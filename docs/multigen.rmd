@@ -1,0 +1,50 @@
+---
+title: "Analysis over multiple generations"
+author: "Clare Horscroft"
+date: "30/03/2021"
+output: html_document
+---
+
+What happens if a mutation stops being selected for? 20 generations of individuals are simulated. The selection stops after 10 generations. The simulation is run 100 times.
+
+Load packages
+```{r}
+require(TwoSampleMR)
+require(jsonlite)
+```
+
+Get file path
+```{r}
+config <- read_json("~/config.json")
+mr_sel_path <- config$mr_sel_path
+```
+
+Use the Wald ratio to get the Biv estimate and standard error for each scenario and each generation
+```{r}
+
+b_mat<-matrix(NA,100,20)
+se_mat<-matrix(NA,100,20)
+for (s in 1:100){
+  setwd(paste0(mr_sel_path,"/Simulations/children/multigen/selStop_sim_",s))
+  for (g in 0:19){
+    dat<-read.table(paste0("dat_",g,".txt"),header = TRUE)
+    mod1<-summary(lm(dat$pheno~dat$geno))
+    bgx<-mod1$coefficients[2,1]
+    segx<-mod1$coefficients[2,2]
+    mod2<-summary(glm(dat$children~dat$geno,family=poisson("log")))
+    bgy<-mod2$coefficients[2,1]
+    segy<-mod2$coefficients[2,2]
+    mrw<-mr_wald_ratio(bgx,bgy,segx,segy)
+    b_mat[s,g+1]<-mrw$b
+    se_mat[s,g+1]<-mrw$se
+  }
+}
+```
+
+Compare selection coefficients the generation before selection ended and the generation after selection ended
+
+```{r}
+boxplot(b_mat,xlab="Generations",ylab="Estimated selection strength")
+abline(h=0.05,lty=2,col="red")
+abline(h=0,lty=2,col="blue")
+```

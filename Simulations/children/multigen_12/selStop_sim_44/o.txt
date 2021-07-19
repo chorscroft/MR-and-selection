@@ -1,0 +1,20 @@
+// Initial random seed:
+2138875511763
+
+// RunInitializeCallbacks():
+initializeSLiMOptions(keepPedigrees = T);
+initializeMutationRate(1e-07);
+initializeMutationType(1, 0, "f", 0);
+initializeMutationType(2, 0, "f", 0);
+initializeGenomicElementType(1, m1, 1);
+initializeGenomicElement(g1, 0, 99999);
+initializeRecombinationRate(1e-08);
+
+// Starting run at generation <start>:
+1 
+
+2138875511763: LOST – RESTARTING
+2138875511763: LOST – RESTARTING
+2138875511763: LOST – RESTARTING
+2138875511763: LOST – RESTARTING
+Generation: 1079

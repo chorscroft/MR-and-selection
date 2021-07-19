@@ -1,0 +1,12 @@
+
+.DS_Store
+
+**/.Rhistory
+
+**/output*.txt
+**/parent.txt
+**/dat*.txt
+
+Simulations/children/multisim/*/children.txt
+Simulations/children/multigen/*/children_multigen.txt
+Simulations/children/multigen_12/*/children_multigen_12.txt

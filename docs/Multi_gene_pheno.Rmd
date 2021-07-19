@@ -1,0 +1,159 @@
+---
+title: "Analysis when there are multiple genes and phenotypes afftecting fitness"
+author: "Clare Horscroft"
+date: "16/03/2021"
+output: html_document
+---
+
+Load packages
+```{r}
+require(systemfit)
+require(TwoSampleMR)
+require(ggdag)
+require(dagitty)
+require(jsonlite)
+```
+
+Get file path
+```{r}
+config <- read_json("~/config.json")
+mr_sel_path <- config$mr_sel_path
+```
+
+# Two phenotypes and seven genes
+
+All five genes contribute to the main phenotype, but one gene affects a second phenotype.
+Both phenotypes impact fitness.
+For this scenario the DAG looks like this:
+```{r}
+dag <- dagitty('dag{
+              SNP1 [pos="0,7"]
+              SNP2 [pos="0,6"]
+              SNP3 [pos="0,5"]  
+              SNP4 [pos="0,4"]
+              SNP5 [pos="0,3"]
+              SNP6 [pos="0,2"]
+              SNP7 [pos="0,1"]
+              Trait1 [pos="1,5"]
+              Trait2 [pos="1,3"]
+              Fitness  [pos="2,4"]
+              Confounder [pos="1.5,7"]
+              SNP1 -> Trait1 -> Fitness
+              SNP2 -> Trait1 -> Fitness
+              SNP3 -> Trait1 -> Fitness
+              SNP4 -> Trait1 -> Fitness
+              SNP4 -> Trait2 -> Fitness
+              SNP5 -> Trait2 -> Fitness
+              SNP6 -> Trait2 -> Fitness
+              SNP7 -> Trait2 -> Fitness
+              Trait1 <- Confounder -> Fitness
+}')
+ggdag(dag, layout = "circle",node_size = 20, text_size = 2.7) +
+  theme_void()
+```
+
+```{r}
+dat<-read.table(paste0(mr_sel_path,"/Simulations/children/two_pheno_7_gene/dat.txt"),header = TRUE)
+```
+
+## MR analysis
+
+Using the systemfit method on fitness
+```{r}
+sf1<-systemfit(log(fit)~pheno1+pheno2,inst = ~geno1+geno2+geno3+geno4+geno5+geno6+geno7,method = "2SLS",data=dat)
+summary(sf1)
+```
+
+### MR for phenotype 1
+
+Using the mr function
+```{r}
+exposure<-t(sapply(2:8,function(x){temp<-summary(lm(dat$pheno1~dat[,x]));c(temp$coefficients[2,c(1,2)],fstatistic=temp$fstatistic[1],rsquared=temp$r.squared)}))
+outcome<-t(sapply(2:8,function(x)summary(lm(log(dat$fit)~dat[,x]))$coefficients[2,c(1,2)]))
+dat_pheno1<-data.frame(SNP=1:7,id.exposure="pheno1",exposure="pheno1",id.outcome="fit",outcome="fit",beta.exposure=exposure[,1],se.exposure=exposure[,2],beta.outcome=outcome[,1],se.outcome=outcome[,2],mr_keep=TRUE)
+
+#only keep the four snps associated with phenotype1
+dat_pheno1<-dat_pheno1[1:4,]
+
+dat_pheno1$beta.outcome[dat_pheno1$beta.exposure<0]<--dat_pheno1$beta.outcome[dat_pheno1$beta.exposure<0]
+dat_pheno1$beta.exposure[dat_pheno1$beta.exposure<0]<--dat_pheno1$beta.exposure[dat_pheno1$beta.exposure<0]
+mr_results <- mr(dat_pheno1, method_list=c("mr_ivw","mr_egger_regression","mr_weighted_median", "mr_weighted_mode"))
+mr_results
+```
+
+
+Sensitivity analysis
+```{r}
+mr_scatter_plot(mr_results, dat_pheno1)
+mr_forest_plot(mr_singlesnp(dat_pheno1))
+```
+
+
+### Phenotype 1 with number of children as the outcome
+
+```{r}
+exposure<-t(sapply(2:8,function(x){temp<-summary(lm(dat$pheno1~dat[,x]));c(temp$coefficients[2,c(1,2)],fstatistic=temp$fstatistic[1],rsquared=temp$r.squared)}))
+outcome<-t(sapply(2:8,function(x)summary(glm(dat$children~dat[,x],family = poisson()))$coefficients[2,c(1,2)]))
+dat_pheno1<-data.frame(SNP=1:7,id.exposure="pheno1",exposure="pheno1",id.outcome="child",outcome="child",beta.exposure=exposure[,1],se.exposure=exposure[,2],beta.outcome=outcome[,1],se.outcome=outcome[,2],mr_keep=TRUE)
+
+#only keep the four snps associated with phenotype1
+dat_pheno1<-dat_pheno1[1:4,]
+
+dat_pheno1$beta.outcome[dat_pheno1$beta.exposure<0]<--dat_pheno1$beta.outcome[dat_pheno1$beta.exposure<0]
+dat_pheno1$beta.exposure[dat_pheno1$beta.exposure<0]<--dat_pheno1$beta.exposure[dat_pheno1$beta.exposure<0]
+mr_results <- mr(dat_pheno1, method_list=c("mr_ivw","mr_egger_regression","mr_weighted_median", "mr_weighted_mode"))
+mr_results
+```
+
+```{r}
+mr_heterogeneity(dat_pheno1)
+mr_scatter_plot(mr_results, dat_pheno1)
+mr_forest_plot(mr_singlesnp(dat_pheno1))
+```
+
+### MR for phenotype 2
+
+Using the mr function
+```{r}
+exposure<-t(sapply(2:8,function(x){temp<-summary(lm(dat$pheno2~dat[,x]));c(temp$coefficients[2,c(1,2)],fstatistic=temp$fstatistic[1],rsquared=temp$r.squared)}))
+outcome<-t(sapply(2:8,function(x)summary(lm(log(dat$fit)~dat[,x]))$coefficients[2,c(1,2)]))
+dat_pheno2<-data.frame(SNP=1:7,id.exposure="pheno2",exposure="pheno2",id.outcome="fit",outcome="fit",beta.exposure=exposure[,1],se.exposure=exposure[,2],beta.outcome=outcome[,1],se.outcome=outcome[,2],mr_keep=TRUE)
+
+#only keep the four snps associated with phenotype1
+dat_pheno2<-dat_pheno2[4:7,]
+
+dat_pheno2$beta.outcome[dat_pheno2$beta.exposure<0]<--dat_pheno2$beta.outcome[dat_pheno2$beta.exposure<0]
+dat_pheno2$beta.exposure[dat_pheno2$beta.exposure<0]<--dat_pheno2$beta.exposure[dat_pheno2$beta.exposure<0]
+mr_results <- mr(dat_pheno2, method_list=c("mr_ivw","mr_egger_regression","mr_weighted_median", "mr_weighted_mode"))
+mr_results
+```
+
+
+Sensitivity analysis
+```{r}
+mr_heterogeneity(dat_pheno2)
+mr_scatter_plot(mr_results, dat_pheno2)
+mr_forest_plot(mr_singlesnp(dat_pheno2))
+```
+
+
+### Phenotype 2 with number of children as the outcome
+
+```{r}
+exposure<-t(sapply(2:8,function(x){temp<-summary(lm(dat$pheno2~dat[,x]));c(temp$coefficients[2,c(1,2)],fstatistic=temp$fstatistic[1],rsquared=temp$r.squared)}))
+outcome<-t(sapply(2:8,function(x)summary(glm(dat$children~dat[,x],family = poisson()))$coefficients[2,c(1,2)]))
+dat_pheno2<-data.frame(SNP=1:7,id.exposure="pheno2",exposure="pheno2",id.outcome="child",outcome="child",beta.exposure=exposure[,1],se.exposure=exposure[,2],beta.outcome=outcome[,1],se.outcome=outcome[,2],mr_keep=TRUE)
+
+#only keep the four snps associated with phenotype2
+dat_pheno2<-dat_pheno2[4:7,]
+
+dat_pheno2$beta.outcome[dat_pheno2$beta.exposure<0]<--dat_pheno2$beta.outcome[dat_pheno2$beta.exposure<0]
+dat_pheno2$beta.exposure[dat_pheno2$beta.exposure<0]<--dat_pheno2$beta.exposure[dat_pheno2$beta.exposure<0]
+mr_results <- mr(dat_pheno2, method_list=c("mr_ivw","mr_egger_regression","mr_weighted_median", "mr_weighted_mode"))
+mr_results
+```
+
+```{r}
+mr_scatter_plot(mr_results, dat_pheno2)
+mr_forest_plot(mr_singlesnp(dat_pheno2))
+```

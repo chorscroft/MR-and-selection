@@ -1,0 +1,221 @@
+---
+title: Number of children as a meeasure of fitness - is it asymptotically unbiased?
+author: Clare Horscroft
+---
+
+## Packages
+
+Load the systemfit and TwoSampleMR packages
+
+```{r}
+require(systemfit)
+require(TwoSampleMR)
+require(jsonlite)
+```
+
+Get file path
+```{r}
+config <- read_json("~/config.json")
+mr_sel_path <- config$mr_sel_path
+```
+
+# Basic simulation
+
+## Read in the Data
+Get the SLiM data from the "children" simualation output.txt and put it into the "dat" data frame.
+Get the parent ID for all the children in the next generation from parent.txt and put it into the par data frame
+
+```{r}
+dat<-read.table(paste0(mr_sel_path,"/Simulations/children/dat.txt"),header = TRUE)
+```
+
+## Check the fitness of the individuals is as expected (0.05 higher for each allele)
+```{r}
+tapply(log(dat$fit),dat$geno,mean)
+```
+
+## Get number of children
+Look at the mean number of children per genotype
+
+```{r}
+tapply(dat$children,dat$geno,mean)
+```
+
+## Calculate fitness estimate using 2SLS method in systemfit
+
+```{r}
+sf<-systemfit(children~pheno,inst = ~geno,method = "2SLS",data=dat)
+summary(sf)
+```
+
+## Is 2SLS the best way to do this?
+This estimate could be biased due to the distribution of the number of children.
+Here is a bar plot of the number of children in the dataset:
+
+```{r}
+barplot(table(dat$children),main="Number of children",xlab="Number of children",ylab="Frequency")
+```
+
+## Does the number of children follow a Poisson distribution?
+
+Are the mean and variance similar?
+```{r}
+mean(dat$children)
+var(dat$children)
+```
+
+Here is the graph again with the poisson distribution overlayed on top/next to it:
+
+```{r}
+c1 <- rgb(173,216,230,max = 255, alpha = 80, names = "lt.blue")
+c2 <- rgb(255,192,203, max = 255, alpha = 80, names = "lt.pink")
+barplot(table(dat$children),main="Number of children",xlab="Number of children",ylab="Frequency",col=c1)
+pois<-dpois(0:10, lambda=2)*10000
+barplot(pois,col=c2,add=TRUE)
+legend("topright",legend=c("Observed","Poisson"),fill=c(c1,c2))
+barplot(rbind(table(dat$children),pois),beside=TRUE,main="Number of children",xlab="Number of children",ylab="Frequency",col=c("black","red"))
+legend("topright",legend=c("Observed","Poisson"),fill=c("black","red"))
+```
+
+This looks close. More formally, a chi-squared test can be used to see if the data is significantly different than expected given the Poisson distribution with \lambda = 2.
+Any values greater than 7 have been grouped.
+
+```{r}
+chiChild<-as.vector(table(dat$children))
+chiChild<-c(chiChild[1:8],sum(chiChild[9:length(chiChild)]))
+chiPois<-dpois(0:7, lambda=2)*10000
+chiPois<-c(chiPois,10000-sum(chiPois))
+
+chisq.test(rbind(chiChild,chiPois))
+```
+
+The chi-sqaured test did not show evidence to reject the null hypothesis (that the distributions are not different)
+
+## Two Sample MR method
+
+Firstly, start by running using a normal linear model:
+
+```{r}
+mod1<-summary(lm(dat$pheno~dat$geno))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(lm(dat$children~dat$geno))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+mr_wald_ratio(bgx,bgy,segx,segy)
+```
+This returns the same estimate for \beta~iv~ as in the 2SLS method.
+
+Now try changing the lm to a glm with a Poisson family distribution:
+
+```{r}
+mod1<-summary(lm(dat$pheno~dat$geno))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(glm(dat$children~dat$geno,family=poisson("log")))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+mr_wald_ratio(bgx,bgy,segx,segy)
+```
+
+# Simulation with large n
+
+```{r}
+setwd("~/Documents/MR-and-selection/Simulations/children/children_large_n/")
+large_dat<-read.table("dat.txt",header = TRUE)
+```
+
+## Check the fitness of the individuals is as expected (0.05 higher for each allele)
+```{r}
+tapply(log(large_dat$fit),large_dat$geno,mean)
+```
+
+## Get number of children
+Look at the mean number of children per genotype
+
+```{r}
+tapply(large_dat$children,large_dat$geno,mean)
+```
+
+## Calculate fitness estimate using 2SLS method in systemfit
+
+```{r}
+sf<-systemfit(children~pheno,inst = ~geno,method = "2SLS",data=large_dat)
+summary(sf)
+```
+Firstly, start by running using a normal linear model:
+
+```{r}
+mod1<-summary(lm(large_dat$pheno~large_dat$geno))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(lm(large_dat$children~large_dat$geno))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+mr_wald_ratio(bgx,bgy,segx,segy)
+```
+
+Now try changing the lm to a glm with a Poisson family distribution:
+
+```{r}
+mod1<-summary(lm(large_dat$pheno~large_dat$geno))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(glm(large_dat$children~large_dat$geno,family=poisson("log")))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+mr_wald_ratio(bgx,bgy,segx,segy)
+```
+
+```{r}
+child_geno_prop<-prop.table(table(large_dat$geno,large_dat$children),1)
+plot(child_geno_prop[1,],type="l",xlab="Number of children",ylab="Proportion")
+lines(child_geno_prop[2,],col="blue")
+lines(child_geno_prop[3,],col="red")
+legend("topright",legend=c(0,1,2),col=c("black","blue","red"),lty=1,title = "Genotype")
+```
+
+
+# Multiple simulations
+
+# For each simulation, extract the final wald ratio
+
+```{r}
+setwd("~/Documents/MR-and-selection/Simulations/children/multisim/")
+effectEsts<-rep(0,1000)
+standardErrs<-rep(0,1000)
+for (i in 1:1000){
+  temp_dat<-read.table(paste0("sim_",i,"/dat.txt"),header = TRUE)
+  mod1<-summary(lm(temp_dat$pheno~temp_dat$geno))
+  bgx<-mod1$coefficients[2,1]
+  segx<-mod1$coefficients[2,2]
+  mod2<-summary(glm(temp_dat$children~temp_dat$geno,family=poisson("log")))
+  bgy<-mod2$coefficients[2,1]
+  segy<-mod2$coefficients[2,2]
+  wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+  effectEsts[i]<-wr$b
+  standardErrs[i]<-wr$se
+}
+```
+
+## Summarise causal effect estimates
+
+```{r}
+summary(effectEsts)
+```
+
+## Histogram of effect estimates
+
+```{r}
+hist(effectEsts, main="Effect estimates over 1,000 simulations")
+```
+
+## on average, how many standard errors away from the true value?
+
+```{r}
+seaway<-(effectEsts-0.05)/standardErrs
+hist(seaway)
+summary(seaway)
+mean(abs(seaway))
+sum(abs(seaway)<2)/1000
+```

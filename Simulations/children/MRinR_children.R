@@ -1,17 +1,25 @@
 require(systemfit)
+require(jsonlite)
+config <- read_json("~/config.json")
+mr_sel_path <- config$mr_sel_path
 
 ################################################################
-## Basic simulation, 0.05(0.01)
+## Basic simulation, 0.05
 ################################################################
-setwd("~/Bristol/Simulations/children")
 
-dat<-read.table("output.txt",header = TRUE)
-par<-read.table("parent.txt",header = TRUE)
+dat<-read.table(paste0(mr_sel_path,"/Simulations/children/dat.txt"),header = TRUE)
+table(dat$geno)
+tapply(dat$pheno,dat$geno,mean)
+tapply(dat$fit,dat$geno,mean)
+tapply(dat$children,dat$geno,mean)
 
-dat$children<-sapply(dat$index,function(x) sum(par$parent1==x | par$parent2==x))
-
-sf<-systemfit(fit~pheno,inst = ~geno,method = "2SLS",data=dat)
+sf<-systemfit(log(fit)~pheno,inst = ~geno,method = "2SLS",data=dat)
 summary(sf)
 
-sf_children<-systemfit(children~pheno,inst = ~geno,method = "2SLS",data=dat)
-summary(sf_children)
+mod1<-summary(lm(dat$pheno~dat$geno))
+bgx<-mod1$coefficients[2,1]
+segx<-mod1$coefficients[2,2]
+mod2<-summary(glm(dat$children~dat$geno,family=poisson("log")))
+bgy<-mod2$coefficients[2,1]
+segy<-mod2$coefficients[2,2]
+mr_wald_ratio(bgx,bgy,segx,segy)

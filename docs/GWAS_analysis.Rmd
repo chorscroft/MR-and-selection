@@ -1,0 +1,50 @@
+---
+title: "Using GWAS data for selection MR analysis"
+author: "Clare Horscroft"
+date: "07/04/2021"
+output: html_document
+---
+
+Load packages
+```{r}
+library(TwoSampleMR)
+```
+
+GWAS ID for number of children fathered/number of live births
+```{r}
+outcome_id <- c("ukb-b-2227","ukb-b-1209")
+```
+
+GWAS ID for exposure e.g. separate MR for each of height, BMI and schizophrenia on number of children.
+Find these here: https://gwas.mrcieu.ac.uk/datasets/
+```{r}
+exposure_id <- c("ieu-a-89", "ieu-b-40", "ieu-a-22")
+```
+
+perform MR
+```{r}
+exp <- extract_instruments(exposure_id)
+out <- extract_outcome_data(exp$SNP, outcome_id)
+dat <- harmonise_data(exp, out)
+```
+Results
+```{r}
+mr_results<-mr(dat)
+mr_results
+```
+Plot
+```{r}
+mr_scatter_plot(mr_results,dat)
+```
+
+
+Heterogeneity
+```{r}
+mr_heterogeneity(dat)
+for(i in 1:length(outcome_id)){
+  for (j in 1:length(exposure_id)){
+    mr_forest_plot(mr_singlesnp(dat[dat$id.exposure==exposure_id[j] & dat$id.outcome==outcome_id[i],]))
+  }
+}
+```
+
