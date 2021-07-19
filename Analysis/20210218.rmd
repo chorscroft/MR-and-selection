@@ -207,3 +207,114 @@ plot(mod1/nkids ~ b)
 lm(mod1/nkids ~ b)
 ```
 
+
+# Compare GLM and LM
+
+```{r}
+nsnp <- 100
+nid <- 10000
+nkids <- 2
+h2 <- 0.8
+
+# sample allele frequencies
+af <- runif(nsnp)
+
+# generate genotypes
+g <- lapply(1:nsnp, function(x) rbinom(nid, 2, af[x])) %>% do.call(cbind, .)
+
+# generate effect sizes
+sigmag <- sqrt(2 * af * (1-af))
+b <- rnorm(nsnp, mean=0, sd=sigmag)
+vg <- sum(af * 2 * (1 - af) * b^2)
+ve <- (vg - h2 * vg)/h2
+vy <- vg + ve
+b <- b/sqrt(vy) * sigmal
+
+# mean of liability should scale to nkids once exponentiated
+mu <- log(nkids^2 / sqrt(nkids^2 + nkids^2)) - sum(2*af*b)
+
+# variance of liability should scale to nkids once exponentiated
+sigmal <- sqrt(log(1+nkids^2/nkids^2))
+
+# generate liability (fitness)
+gbv <- g %*% b
+l <- mu + gbv + rnorm(nid, 0, sqrt(sigmal^2 * (1-h2)))
+
+# transform to observed scale
+nu <- exp(l)
+
+# sample counts by drawing from poisson
+y1 <- rpois(nid, nu)
+
+# estimate effects of each SNP using lm
+mod1 <- sapply(1:nsnp, function(x) lm(y1 ~ g[,x])$coef[2])
+
+# estimate effects of each SNP using glm
+mod2 <- sapply(1:nsnp, function(x) glm(y1 ~ g[,x], family=poisson(link="log"))$coef[2])
+
+# how do the SNP effect estimates compare across the two models?
+plot(mod1 ~ mod2)
+```
+
+```{r}
+summary(lm(mod2 ~ mod1))
+```
+
+- Looks like the effect estimates are extremely close - but need to divide the lm effect estimate by mean number of children in the sample
+
+## Standard deviation units transformation
+
+```{r}
+nsnp <- 100
+nid <- 10000
+nkids <- 2
+h2 <- 0.8
+
+# sample allele frequencies
+af <- runif(nsnp)
+
+# generate genotypes
+g <- lapply(1:nsnp, function(x) rbinom(nid, 2, af[x])) %>% do.call(cbind, .)
+
+# generate effect sizes
+sigmag <- sqrt(2 * af * (1-af))
+b <- rnorm(nsnp, mean=0, sd=sigmag)
+vg <- sum(af * 2 * (1 - af) * b^2)
+ve <- (vg - h2 * vg)/h2
+vy <- vg + ve
+b <- b/sqrt(vy) * sigmal
+
+# mean of liability should scale to nkids once exponentiated
+mu <- log(nkids^2 / sqrt(nkids^2 + nkids^2)) - sum(2*af*b)
+
+# variance of liability should scale to nkids once exponentiated
+sigmal <- sqrt(log(1+nkids^2/nkids^2))
+
+# generate liability (fitness)
+gbv <- g %*% b
+l <- mu + gbv + rnorm(nid, 0, sqrt(sigmal^2 * (1-h2)))
+
+# transform to observed scale
+nu <- exp(l)
+
+# sample counts by drawing from poisson
+y1 <- rpois(nid, nu)
+
+# estimate effects of each SNP on raw units
+mod1 <- sapply(1:nsnp, function(x) lm(y1 ~ g[,x])$coef[2])
+
+y2 <- scale(y1)
+
+# estimate effects of each SNP on sd units
+mod2 <- sapply(1:nsnp, function(x) lm(y2 ~ g[,x])$coef[2])
+
+# how do the SNP effect estimates compare across the two models?
+plot(mod1 ~ mod2)
+```
+
+Now scale the effect estimate by sd
+
+```{r}
+mod2a <- mod2 * sd(y1)
+plot(mod1 ~ mod2a)
+```
