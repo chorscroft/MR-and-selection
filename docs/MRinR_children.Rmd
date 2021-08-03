@@ -210,12 +210,56 @@ summary(effectEsts)
 hist(effectEsts, main="Effect estimates over 1,000 simulations")
 ```
 
-## on average, how many standard errors away from the true value?
+## Distribution of standard errors
 
 ```{r}
-seaway<-(effectEsts-0.05)/standardErrs
-hist(seaway)
-summary(seaway)
-mean(abs(seaway))
-sum(abs(seaway)<2)/1000
+hist(standardErrs)
 ```
+
+
+
+
+# Multiple simulations with linear model
+
+# For each simulation, extract the final wald ratio
+
+```{r}
+setwd("~/Documents/MR-and-selection/Simulations/children/multisim/")
+effectEsts<-rep(0,1000)
+standardErrs<-rep(0,1000)
+for (i in 1:1000){
+  temp_dat<-read.table(paste0("sim_",i,"/dat.txt"),header = TRUE)
+  mod1<-summary(lm(temp_dat$pheno~temp_dat$geno))
+  bgx<-mod1$coefficients[2,1]
+  segx<-mod1$coefficients[2,2]
+  mod2<-summary(lm(temp_dat$children~temp_dat$geno))
+  bgy<-mod2$coefficients[2,1]
+  segy<-mod2$coefficients[2,2]
+  wr<-mr_wald_ratio(bgx,bgy,segx,segy)
+  effectEsts[i]<-wr$b
+  standardErrs[i]<-wr$se
+}
+```
+
+## Summarise causal effect estimates
+
+Divide by mean number of children
+
+```{r}
+effectEsts<-effectEsts/2
+summary(effectEsts)
+```
+
+## Histogram of effect estimates
+
+```{r}
+hist(effectEsts, main="Effect estimates over 1,000 simulations")
+```
+
+## Distribution of standard errors
+
+```{r}
+hist(standardErrs)
+```
+
+Effect estimate can be recovered using a standard lm model rather than a glm, however the standard errors are larger.
