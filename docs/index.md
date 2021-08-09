@@ -26,3 +26,7 @@ Here are the links to the html documents:
 [Multi-generations](https://chorscroft.github.io/MR-and-selection/multigen.html)
            
 [Multi-generations with age](https://chorscroft.github.io/MR-and-selection/multigen_with_age.html)   
+
+## Number of children
+
+[Number of children analysis based on reverse MR results](https://chorscroft.github.io/MR-and-selection/number_of_children/)
