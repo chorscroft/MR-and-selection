@@ -225,6 +225,9 @@ af <- runif(nsnp)
 # generate genotypes
 g <- lapply(1:nsnp, function(x) rbinom(nid, 2, af[x])) %>% do.call(cbind, .)
 
+# variance of liability should scale to nkids once exponentiated
+sigmal <- sqrt(log(1+nkids^2/nkids^2))
+
 # generate effect sizes
 sigmag <- sqrt(2 * af * (1-af))
 b <- rnorm(nsnp, mean=0, sd=sigmag)
@@ -235,9 +238,6 @@ b <- b/sqrt(vy) * sigmal
 
 # mean of liability should scale to nkids once exponentiated
 mu <- log(nkids^2 / sqrt(nkids^2 + nkids^2)) - sum(2*af*b)
-
-# variance of liability should scale to nkids once exponentiated
-sigmal <- sqrt(log(1+nkids^2/nkids^2))
 
 # generate liability (fitness)
 gbv <- g %*% b
@@ -300,6 +300,9 @@ af <- runif(nsnp)
 # generate genotypes
 g <- lapply(1:nsnp, function(x) rbinom(nid, 2, af[x])) %>% do.call(cbind, .)
 
+# variance of liability should scale to nkids once exponentiated
+sigmal <- sqrt(log(1+nkids^2/nkids^2))
+
 # generate effect sizes
 sigmag <- sqrt(2 * af * (1-af))
 b <- rnorm(nsnp, mean=0, sd=sigmag)
@@ -310,9 +313,6 @@ b <- b/sqrt(vy) * sigmal
 
 # mean of liability should scale to nkids once exponentiated
 mu <- log(nkids^2 / sqrt(nkids^2 + nkids^2)) - sum(2*af*b)
-
-# variance of liability should scale to nkids once exponentiated
-sigmal <- sqrt(log(1+nkids^2/nkids^2))
 
 # generate liability (fitness)
 gbv <- g %*% b
@@ -342,3 +342,17 @@ Now scale the effect estimate by sd
 mod2a <- mod2 * sd(y1)
 plot(mod1 ~ mod2a)
 ```
+
+## Rank Transform 
+
+```{r}
+library(RNOmni)
+y3 <- RankNorm(y1)
+mod3 <- sapply(1:nsnp, function(x) lm(y3 ~ g[,x])$coef[2])
+
+# how do the SNP effect estimates compare across the two models?
+plot(mod1 ~ mod3)
+mod3a <- mod3 * sd(y1)
+plot(mod1 ~ mod3a)
+```
+

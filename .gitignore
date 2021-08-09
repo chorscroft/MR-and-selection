@@ -10,3 +10,10 @@
 Simulations/children/multisim/*/children.txt
 Simulations/children/multigen/*/children_multigen.txt
 Simulations/children/multigen_12/*/children_multigen_12.txt
+
+**.tsv
+**.vcf.gz
+**.TBL
+**.TBL.info
+
+Meta_analysis_no_children_SD/ieugwasr_oauth/*

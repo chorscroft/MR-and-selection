@@ -1,0 +1,213 @@
+---
+title: "Health"
+author: "Clare Horscroft"
+date: "06/08/2021"
+output: html_document
+---
+
+Investigating health measures in relation to number of children
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Overall
+
+#### Overall health rating
+
+```{r }
+d <- make_dat("ukb-b-6306", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-6306")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Number of self-reported cancers
+
+```{r }
+d <- make_dat("ukb-b-660", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-660")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Eyes
+
+#### Age started wearing glasses or contact lenses
+
+```{r }
+d <- make_dat("ukb-b-5801", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-5801")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Spherical power (right)
+
+```{r }
+d <- make_dat("ukb-b-19994", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-19994")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Blood
+
+#### Haematocrit percentage
+
+```{r }
+d <- make_dat("ukb-d-30030_irnt", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-d-30030_irnt")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### High light scatter reticulocyte count
+
+```{r }
+d <- make_dat("ukb-d-30300_irnt", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-d-30300_irnt")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### High light scatter reticulocyte percentage
+
+```{r }
+d <- make_dat("ukb-d-30290_irnt", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-d-30290_irnt")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Reticulocyte count
+
+```{r }
+d <- make_dat("ukb-d-30250_irnt", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-d-30250_irnt")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### SHBG 
+
+```{r }
+d <- make_dat("ukb-d-30830_irnt", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-d-30830_irnt")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### IGF-1
+
+```{r }
+d <- make_dat("ukb-d-30770_irnt", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-d-30770_irnt")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Lungs
+
+#### Forced vital capacity (FVC)
+
+```{r }
+d <- make_dat("ukb-b-7953", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-7953")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### FVC
+
+```{r }
+d <- make_dat("ieu-b-105", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ieu-b-105")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+

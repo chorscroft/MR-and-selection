@@ -224,7 +224,7 @@ legend("topright",legend=c(3,4,5,6,7),col=c(1:5),lty=1)
 # Repeat simulation 100 times
 
 ```{r}
-  
+set.seed(418719)
 oee_b<-matrix(0,100,25)
 oee_se<-matrix(0,100,25)
 sba_b<-list(matrix(0,100,25),matrix(0,100,25),matrix(0,100,25),matrix(0,100,25),matrix(0,100,25))

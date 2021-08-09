@@ -1,0 +1,34 @@
+# Meta-analysis of the two uk biobank summary statistics for:
+# ukb-b-1209: Number of live births
+# ukb-b-2227: Number of children fathered
+
+# Set options
+SCHEME   STDERR
+GENOMICCONTROL OFF
+AVERAGEFREQ ON
+MINMAXFREQ ON
+
+# Describe and process the number of live births file
+MARKER   variant_id
+DEFAULT  250782
+ALLELE   effect_allele other_allele
+FREQ     effect_allele_frequency
+EFFECT   beta
+STDERR   standard_error
+PVAL     p_value
+
+PROCESS ukb-b-1209.tsv 
+
+# Describe and process the number of children fathered file
+MARKER   variant_id
+DEFAULT  209872
+ALLELE   effect_allele other_allele
+FREQ     effect_allele_frequency
+EFFECT   beta
+STDERR   standard_error
+PVAL     p_value
+
+PROCESS ukb-b-2227.tsv 
+
+# Execute meta-analysis
+ANALYZE HETEROGENEITY

@@ -1,0 +1,149 @@
+---
+title: "BMI"
+author: "Clare Horscroft"
+date: "04/08/2021"
+output: html_document
+---
+
+Investigating BMI, weight, and fat measures in relation to number of children
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## BMI
+
+```{r }
+d <- make_dat("ukb-b-19953", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-19953")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+BMI highly related with number of children, no evidence of reverse causality (i.e. more children does not cause higher BMI)
+
+## Weight
+
+```{r }
+d <- make_dat("ukb-b-11842", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-11842")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r}
+d <- mv_extract_exposures(c("ukb-b-11842", "ukb-b-19953"))
+o <- extract_outcome_data(d$SNP, "ieu-b-4760")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+Weight effect explained by BMI.
+
+
+## Hip circumference
+
+```{r }
+d <- make_dat("ukb-b-15590", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-15590")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Waist circumference
+
+```{r }
+d <- make_dat("ukb-b-9405", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-9405")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r}
+d <- mv_extract_exposures(c("ukb-b-15590", "ukb-b-9405", "ukb-b-19953"))
+o <- extract_outcome_data(d$SNP, "ieu-b-4760")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+
+Waist/hip circumference effect explained by BMI.
+
+## Body fat
+
+#### Body fat percentage
+
+```{r }
+d <- make_dat("ukb-b-8909", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-8909")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Whole body fat mass
+
+```{r }
+d <- make_dat("ukb-b-19393", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-19393")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Impedance of whole body
+
+```{r }
+d <- make_dat("ukb-b-19921", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-19921")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+
+

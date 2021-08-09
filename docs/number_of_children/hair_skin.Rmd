@@ -1,0 +1,151 @@
+---
+title: "Hair and skin"
+author: "Clare Horscroft"
+date: "05/08/2021"
+output: html_document
+---
+
+Investigating hair and skin-related measures in relation to number of children
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+
+## Childhood sunburn occasions
+
+```{r }
+d <- make_dat("ukb-b-13246", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-13246")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Ease of skin tanning
+
+```{r }
+d <- make_dat("ukb-b-533", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-533")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Use of sun/uv protection 
+
+```{r }
+d <- make_dat("ukb-b-7422", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-7422")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Skin colour
+
+```{r }
+d <- make_dat("ukb-b-19560", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-19560")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Facial ageing
+
+younger then you are - same - older
+
+```{r }
+d <- make_dat("ukb-b-2148", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-2148")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Hair/balding pattern 1
+
+Pattern 1 - full head of hair
+
+```{r }
+d <- make_dat("ukb-d-2395_1", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-d-2395_1")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Hair/balding pattern 3
+
+Pattern 3 - bald spot
+
+```{r }
+d <- make_dat("ukb-a-302", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-a-302")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Hair/balding pattern 4
+
+Pattern 4 - totally bald
+
+```{r }
+d <- make_dat("ukb-a-303", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-a-303")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Having a full head of hair has a positive effect on number of children, the opposite for other hair patterns.

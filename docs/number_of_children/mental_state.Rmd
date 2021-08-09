@@ -1,0 +1,108 @@
+---
+title: "Mental state"
+author: "Clare Horscroft"
+date: "06/08/2021"
+output: html_document
+---
+
+Investigating various mental states in relation to number of children
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+
+## Miserableness
+
+```{r }
+d <- make_dat("ukb-b-18994", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-18994")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+No effect
+
+## Mood swings
+
+```{r }
+d <- make_dat("ukb-b-14180", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-14180")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+No consistent effect.
+
+## Nervous feelings
+
+```{r }
+d <- make_dat("ukb-b-20544", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-20544")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Suffer from 'nerves'
+
+```{r }
+d <- make_dat("ukb-b-19957", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-19957")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r}
+d <- mv_extract_exposures(c("ukb-b-20544", "ukb-b-19957"))
+o <- extract_outcome_data(d$SNP, "ieu-b-4760")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+Suffer from nerves a better predictor.
+
+
+## Frequency of tenseness / restlessness in last 2 weeks
+
+```{r }
+d <- make_dat("ukb-b-5664", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-5664")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Maybe some evidence?
