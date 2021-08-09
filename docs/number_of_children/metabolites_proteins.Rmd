@@ -1,0 +1,128 @@
+---
+title: "Metabolites and proteins"
+author: "Clare Horscroft"
+date: "05/08/2021"
+output: html_document
+---
+
+Investigating metabolites and proteins in relation to number of children
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+
+## Metabolites
+
+#### Docosahexaenoic acid
+
+```{r }
+d <- make_dat("met-d-DHA", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "met-d-DHA")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Ratio of docosahexaenoic acid to total fatty acids
+
+```{r }
+d <- make_dat("met-d-DHA_pct", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "met-d-DHA_pct")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Seems to be some kind of relation between docosahexaenoic acid and number of children.
+
+#### Ratio of omega-3 fatty acids to total fatty acids
+
+```{r }
+d <- make_dat("met-d-Omega_3_pct", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "met-d-Omega_3_pct")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Ratio of omega-6 fatty acids to omega-3 fatty acids
+
+```{r }
+d <- make_dat("met-d-Omega_6_by_Omega_3", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "met-d-Omega_6_by_Omega_3")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Omega 3 related measures appears to be related to number of children.
+
+```{r}
+d <- mv_extract_exposures(c("met-d-DHA_pct", "met-d-Omega_3_pct"))
+o <- extract_outcome_data(d$SNP, "ieu-b-4760")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+
+What does this mean??
+
+## Proteins
+
+Both proteins have very small sample sizes <4000. There may be a relation between these proteins and number of children,
+
+#### Erythrocyte band 7 integral membrane protein
+
+```{r }
+d <- make_dat("prot-a-2882", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "prot-a-2882")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Transmembrane protease serine 11D
+
+```{r }
+d <- make_dat("prot-a-3024", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "prot-a-3024")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```

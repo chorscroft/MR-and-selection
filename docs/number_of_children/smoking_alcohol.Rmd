@@ -1,0 +1,108 @@
+---
+title: "Smoking and Alcohol"
+author: "Clare Horscroft"
+date: "04/08/2021"
+output: html_document
+---
+
+Investigating smoking and alcohol consumption in relation to number of children
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Alcohol intake frequency
+
+```{r }
+d <- make_dat("ukb-b-5779", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-5779")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+No evidence of an effect.
+
+## Ever smoked
+
+```{r }
+d <- make_dat("ukb-b-20261", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-20261")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Past tobacco smoking
+
+Note this is coded from 1=Smoke most or all days through to 4=Never smoked
+
+```{r }
+d <- make_dat("ukb-b-2134", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-2134")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Never smoked
+
+```{r }
+d <- make_dat("ukb-d-20116_0", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-d-20116_0")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Current tabacco smoking
+
+```{r }
+d <- make_dat("ukb-b-223", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-223")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Smoking and SES
+
+Use degree for SES and Past Smoking
+
+```{r}
+d <- mv_extract_exposures(c("ukb-b-16489", "ukb-b-2134"))
+o <- extract_outcome_data(d$SNP, "ieu-b-4760")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+Past tobacco smoking effect on number of children is explained by having a degree.

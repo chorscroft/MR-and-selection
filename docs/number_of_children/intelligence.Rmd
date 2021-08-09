@@ -1,0 +1,63 @@
+---
+title: "Intelligence"
+author: "Clare Horscroft"
+date: "06/08/2021"
+output: html_document
+---
+
+Investigating intelligence measures in relation to number of children
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+
+## Cognitive performance
+
+```{r }
+d <- make_dat("ebi-a-GCST006572", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ebi-a-GCST006572")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Fluid intelligence score
+
+```{r }
+d <- make_dat("ukb-b-5238", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-5238")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Intelligence
+
+```{r }
+d <- make_dat("ebi-a-GCST006250", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ebi-a-GCST006250")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+For all intelligence measures there is a negative effect on number of children.

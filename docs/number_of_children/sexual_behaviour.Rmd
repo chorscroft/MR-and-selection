@@ -1,0 +1,66 @@
+---
+title: "Sexual behaviour"
+author: "Clare Horscroft"
+date: "05/08/2021"
+output: html_document
+---
+
+Investigating sexual behaviour in relation to number of children
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Age at first live birth
+
+```{r }
+d <- make_dat("ukb-b-12405", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-12405")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Age at first live birth has a large effect on the number of children. Interestingly high effect in the reverse (which doesn't make sense temporally) so maybe some form of bias going on.
+
+## Age first had sexual intercourse 
+
+```{r }
+d <- make_dat("ukb-b-6591", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-6591")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Very highly related, in BOTH directions..
+
+## Lifetime number of sexual partners 
+
+```{r }
+d <- make_dat("ukb-b-4256", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-4256")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+No impact.
