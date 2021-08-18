@@ -1,0 +1,131 @@
+---
+title: "Intelligence, degree, and number of children"
+author: "Clare Horscroft"
+date: "18/08/2021"
+output: html_document
+---
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+# Number of children
+
+## Effect of intelligence on number of children
+
+```{r }
+d <- make_dat("ebi-a-GCST006250", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Effect of degree on number of children
+
+```{r }
+d <- make_dat("ukb-b-16489", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## MVMR for both intelligence and degree on number of children
+
+```{r}
+d <- mv_extract_exposures(c("ebi-a-GCST006250", "ukb-b-16489"))
+o <- extract_outcome_data(d$SNP, "ieu-b-4760")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+
+Having a degree removes the effect of intelligence.
+
+But does intelligence cause degree? or vice versa?
+
+## Effect of intelligence on degree
+
+```{r }
+d <- make_dat("ebi-a-GCST006250", "ukb-b-16489")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Very strong relationship
+
+## Effect of degree on intelligence
+
+```{r }
+d <- make_dat("ukb-b-16489", "ebi-a-GCST006250")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Also a very strong relationship.
+
+Therefore, having a degree and intelligence cause each other, but having a degree is more important in terms of number of children.
+
+Does this still hold when split by sex?
+
+# Number of children fathered
+
+## Effect of intelligence on number of children fathered
+
+```{r }
+d <- make_dat("ebi-a-GCST006250", "ukb-b-2227")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Effect of degree on number of children fathered
+
+```{r }
+d <- make_dat("ukb-b-16489", "ukb-b-2227")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## MVMR for both intelligence and degree on number of children fathered
+
+```{r}
+d <- mv_extract_exposures(c("ebi-a-GCST006250", "ukb-b-16489"))
+o <- extract_outcome_data(d$SNP, "ukb-b-2227")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+
+Having a degree removes the effect of intelligence.
+
+# Number of live births
+
+## Effect of intelligence on number of live births
+
+```{r }
+d <- make_dat("ebi-a-GCST006250", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Effect of degree on number of live births 
+
+```{r }
+d <- make_dat("ukb-b-16489", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## MVMR for both intelligence and degree on number of live births
+
+```{r}
+d <- mv_extract_exposures(c("ebi-a-GCST006250", "ukb-b-16489"))
+o <- extract_outcome_data(d$SNP, "ukb-b-1209")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+
+Having a degree removes the effect of intelligence.
