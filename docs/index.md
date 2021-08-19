@@ -8,6 +8,7 @@ This project is about applying a Mendelian Randomization framework to natural se
 
 Here are the links to the html documents:
 
+## Pre-lim work
 
 [Liability scale - Gib](https://chorscroft.github.io/MR-and-selection/20210218.html)
 
@@ -30,3 +31,15 @@ Here are the links to the html documents:
 ## Number of children
 
 [Number of children analysis based on reverse MR results](https://chorscroft.github.io/MR-and-selection/number_of_children/)
+
+## Number of children fathered
+
+[Number of children fathered analysis based on reverse MR results](https://chorscroft.github.io/MR-and-selection/number_of_children_fathered/)
+
+## Number of live births
+
+[Number of live births analysis based on reverse MR results](https://chorscroft.github.io/MR-and-selection/number_of_live_births/)
+
+## Intelligence, degree, and number of children
+
+[Intelligence, degree, and number of children](https://chorscroft.github.io/MR-and-selection/Intelligence_degree_children.html)
