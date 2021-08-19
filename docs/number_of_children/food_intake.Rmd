@@ -7,7 +7,7 @@ output: html_document
 
 Investigating food intake in relation to number of children
 
-```{r setup}
+```{r setup, message=FALSE}
 library(TwoSampleMR)
 ```
 

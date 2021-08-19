@@ -1,0 +1,66 @@
+---
+title: "Smoking and Alcohol"
+author: "Clare Horscroft"
+date: "04/08/2021"
+output: html_document
+---
+
+Investigating smoking and alcohol consumption in relation to number of live births
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Average weekly beer plus cider intake
+
+```{r }
+d <- make_dat("ukb-b-5174", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-5174")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+No large effect.
+
+## Past tobacco smoking
+
+Note this is coded from 1=Smoke most or all days through to 4=Never smoked
+
+```{r }
+d <- make_dat("ukb-b-2134", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-2134")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Never smoked
+
+```{r }
+d <- make_dat("ukb-d-20116_0", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-d-20116_0")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Never smoked shows evidence of a negative effect on the number of live births.

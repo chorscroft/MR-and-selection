@@ -1,0 +1,62 @@
+---
+title: "Skin"
+author: "Clare Horscroft"
+date: "05/08/2021"
+output: html_document
+---
+
+Investigating skin-related measures in relation to number of children fathered
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Childhood sunburn occasions
+
+```{r }
+d <- make_dat("ukb-b-13246", "ukb-b-2227")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-2227", "ukb-b-13246")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Ease of skin tanning
+
+```{r }
+d <- make_dat("ukb-b-533", "ukb-b-2227")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-2227", "ukb-b-533")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Skin colour
+
+```{r }
+d <- make_dat("ukb-b-19560", "ukb-b-2227")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-2227", "ukb-b-19560")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Results show that having more childhood sunburn occasions is negatively related with number of children. Ease of tanning is also negatively related. Having darker skin is positively related.

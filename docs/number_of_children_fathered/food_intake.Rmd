@@ -1,0 +1,47 @@
+---
+title: "Food intake"
+author: "Clare Horscroft"
+date: "05/08/2021"
+output: html_document
+---
+
+Investigating food intake in relation to number of children fathered
+
+```{r setup, message=FALSE}
+library(TwoSampleMR)
+```
+
+
+## Bread intake
+
+```{r }
+d <- make_dat("ukb-b-11348", "ukb-b-2227")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-2227", "ukb-b-11348")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Hot drink temperature
+
+```{r }
+d <- make_dat("ukb-b-14203", "ukb-b-2227")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-2227", "ukb-b-14203")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+These intake measures seem to be somewhat related to number of children, but it isn't massively strong and there's some evidence of reverse causality or confounding.

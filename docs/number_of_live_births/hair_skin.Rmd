@@ -1,0 +1,96 @@
+---
+title: "Hair and skin"
+author: "Clare Horscroft"
+date: "05/08/2021"
+output: html_document
+---
+
+Investigating hair and skin-related measures in relation to number of live births
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Childhood sunburn occasions
+
+```{r }
+d <- make_dat("ukb-b-13246", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-13246")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Ease of skin tanning
+
+```{r }
+d <- make_dat("ukb-b-533", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-533")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Skin colour
+
+```{r }
+d <- make_dat("ukb-b-19560", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-19560")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Hair/balding pattern 1
+
+Pattern 1 - full head of hair
+
+```{r }
+d <- make_dat("ukb-d-2395_1", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-d-2395_1")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Hair/balding pattern 4
+
+Pattern 4 - totally bald
+
+```{r }
+d <- make_dat("ukb-a-303", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-a-303")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```

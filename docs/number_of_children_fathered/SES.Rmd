@@ -1,0 +1,29 @@
+---
+title: "SES investigations"
+author: "Clare Horscroft"
+date: "03/08/2021"
+output: html_document
+---
+
+Investigating SES measures in relation to number of children fathered
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Degree
+
+```{r }
+d <- make_dat("ukb-b-16489", "ukb-b-2227")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+```{r }
+d <- make_dat("ukb-b-2227", "ukb-b-16489")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Having a degree is very strongly negatively related to having children. However, there is also evidence of reverse causality or confounding.

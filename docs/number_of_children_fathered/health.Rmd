@@ -1,0 +1,30 @@
+---
+title: "Health"
+author: "Clare Horscroft"
+date: "06/08/2021"
+output: html_document
+---
+
+Investigating health measures in relation to number of children fathered
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Age started wearing glasses or contact lenses
+
+```{r }
+d <- make_dat("ukb-b-5801", "ukb-b-2227")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-2227", "ukb-b-5801")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Somewhat related, perhaps reverse causal or confounded by another factor?

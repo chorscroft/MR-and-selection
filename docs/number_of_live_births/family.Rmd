@@ -1,0 +1,28 @@
+---
+title: "Family"
+author: "Clare Horscroft"
+date: "05/08/2021"
+output: html_document
+---
+
+Investigating family in relation to number of live births
+
+```{r setup, message=FALSE}
+library(TwoSampleMR)
+```
+
+## Number of full sisters
+
+```{r }
+d <- make_dat("ukb-b-5593", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-5593")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```

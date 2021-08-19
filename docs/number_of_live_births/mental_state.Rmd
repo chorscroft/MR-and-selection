@@ -1,0 +1,46 @@
+---
+title: "Mental state"
+author: "Clare Horscroft"
+date: "06/08/2021"
+output: html_document
+---
+
+Investigating various mental states in relation to number of live births
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Miserableness
+
+```{r }
+d <- make_dat("ukb-b-18994", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-18994")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Frequency of tenseness / restlessness in last 2 weeks
+
+```{r }
+d <- make_dat("ukb-b-5664", "ieu-b-4760")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ieu-b-4760", "ukb-b-5664")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Noisy measures, not much evidence of a consistent effect.

@@ -1,0 +1,114 @@
+---
+title: "Activity"
+author: "Clare Horscroft"
+date: "05/08/2021"
+output: html_document
+---
+
+Investigating activity measures in relation to number of live births
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Jobs
+
+#### Job involves heavy manual or physical work
+
+```{r }
+d <- make_dat("ukb-b-2002", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-2002")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Job involves mainly walking or standing
+
+```{r }
+d <- make_dat("ukb-b-4461", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-4461")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+These job types seem to have an effect on the number of children, but why?
+
+## Time spent
+
+#### Time spend outdoors in summer
+
+```{r }
+d <- make_dat("ukb-b-969", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-969")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Time spent watching television (TV) 
+
+```{r }
+d <- make_dat("ukb-b-5192", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-5192")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Usual walking pace
+
+```{r }
+d <- make_dat("ukb-b-4711", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-4711")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Weekly usage of mobile phone in last 3 months
+
+```{r }
+d <- make_dat("ukb-b-17999", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-17999")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
