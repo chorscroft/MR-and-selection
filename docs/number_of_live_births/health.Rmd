@@ -1,0 +1,236 @@
+---
+title: "Health"
+author: "Clare Horscroft"
+date: "06/08/2021"
+output: html_document
+---
+
+Investigating health measures in relation to number of live births
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Overall
+
+#### Overall health rating
+
+```{r }
+d <- make_dat("ukb-b-6306", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-6306")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Eyes
+
+#### Age started wearing glasses or contact lenses
+
+```{r }
+d <- make_dat("ukb-b-5801", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-5801")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Blood
+
+#### Haematocrit percentage
+
+```{r }
+d <- make_dat("ukb-d-30030_irnt", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-d-30030_irnt")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### High light scatter reticulocyte count
+
+```{r }
+d <- make_dat("ukb-d-30300_irnt", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-d-30300_irnt")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### High light scatter reticulocyte percentage
+
+```{r }
+d <- make_dat("ukb-d-30290_irnt", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-d-30290_irnt")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Reticulocyte count
+
+```{r }
+d <- make_dat("ukb-d-30250_irnt", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-d-30250_irnt")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### SHBG 
+
+```{r }
+d <- make_dat("ukb-d-30830_irnt", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-d-30830_irnt")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### HbA1C
+
+```{r }
+d <- make_dat("ieu-b-103", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ieu-b-103")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Lungs
+
+#### Forced vital capacity (FVC)
+
+```{r }
+d <- make_dat("ukb-b-7953", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-7953")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### FVC
+
+```{r }
+d <- make_dat("ieu-b-105", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ieu-b-105")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Pulse
+
+#### Pulse rate
+
+```{r }
+d <- make_dat("ukb-b-18103", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-18103")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Strength
+
+#### Hand grip strength
+
+```{r }
+d <- make_dat("ukb-b-10215", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-10215")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Bone density
+
+#### Total body bone mineral density
+
+```{r }
+d <- make_dat("ebi-a-GCST005348", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ebi-a-GCST005348")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Most health measures seem to be noisy. Health measures that may be related to number of children: Hand grip strength, FVC, and Age started wearing glasses or contact lenses. Overall health also seems to be related, but there may be reverse causality too.

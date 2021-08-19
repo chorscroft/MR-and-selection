@@ -1,0 +1,49 @@
+---
+title: "Food intake"
+author: "Clare Horscroft"
+date: "05/08/2021"
+output: html_document
+---
+
+Investigating food intake in relation to number of live births
+
+```{r setup, message=FALSE}
+library(TwoSampleMR)
+```
+
+
+## Coffee type: Ground coffee (include espresso, filter etc) 
+
+```{r }
+d <- make_dat("ukb-d-1508_3", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-d-1508_3")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+
+
+## Cereal: Other
+
+```{r }
+d <- make_dat("ukb-d-1468_5", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-d-1468_5")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Food intake seems to be somewhat related to number of children, but it isn't massively strong and there's some evidence of reverse causality.

@@ -1,0 +1,128 @@
+---
+title: "Metabolites and proteins"
+author: "Clare Horscroft"
+date: "05/08/2021"
+output: html_document
+---
+
+Investigating metabolites and proteins in relation to number of live births
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Fatty acids
+
+#### Ratio of docosahexaenoic acid to total fatty acids
+
+```{r }
+d <- make_dat("met-d-DHA_pct", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "met-d-DHA_pct")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Seems to be some kind of relation between docosahexaenoic acid and number of children.
+
+#### Ratio of omega-3 fatty acids to total fatty acids
+
+```{r }
+d <- make_dat("met-d-Omega_3_pct", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "met-d-Omega_3_pct")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Ratio of omega-6 fatty acids to omega-3 fatty acids
+
+```{r }
+d <- make_dat("met-d-Omega_6_by_Omega_3", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "met-d-Omega_6_by_Omega_3")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Ratio of linoleic acid to total fatty acids
+
+```{r }
+d <- make_dat("met-d-LA_pct", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "met-d-LA_pct")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Average number of double bonds in a fatty acid chain
+
+```{r }
+d <- make_dat("met-c-851", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "met-c-851")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Ratio of bisallylic groups to double bonds
+
+```{r }
+d <- make_dat("met-c-844", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "met-c-844")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Tyrosine
+
+```{r }
+d <- make_dat("met-d-Tyr", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "met-d-Tyr")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```

@@ -1,0 +1,176 @@
+---
+title: "SES investigations"
+author: "Clare Horscroft"
+date: "03/08/2021"
+output: html_document
+---
+
+Investigating SES measures in relation to number of live births
+
+```{r setup}
+library(TwoSampleMR)
+```
+
+## Townsend deprivation index at recruitment
+
+```{r }
+d <- make_dat("ukb-b-10011", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-10011")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+No causal relationship, did not appear in list of traits from rms2.
+
+## Average total household income before tax
+
+```{r }
+d <- make_dat("ukb-b-7408", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-7408")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Appears to be a causal relationship.
+
+## Years of schooling
+
+```{r }
+d <- make_dat("ieu-a-1239", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ieu-a-1239")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Appears to be a causal realtionship.
+
+## Income and Years of Schooling
+
+```{r}
+d <- mv_extract_exposures(c("ieu-a-1239", "ukb-b-7408"))
+o <- extract_outcome_data(d$SNP, "ukb-b-1209")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+Income attenuates. Income effect on number of children is mostly explained by years of schooling.
+
+## Age completed full time education
+
+```{r }
+d <- make_dat("ukb-a-505", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-a-505")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+## Qualifications
+
+#### No Qualifications
+
+```{r }
+d <- make_dat("ukb-b-17729", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-17729")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### A levels
+
+```{r }
+d <- make_dat("ukb-b-11615", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-11615")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+#### Degree
+
+```{r }
+d <- make_dat("ukb-b-16489", "ukb-b-1209")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+```{r }
+d <- make_dat("ukb-b-1209", "ukb-b-16489")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Can these all be explained using years of schooling?
+
+```{r}
+d <- mv_extract_exposures(c("ieu-a-1239", "ukb-b-17729"))
+o <- extract_outcome_data(d$SNP, "ukb-b-1209")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+
+```
+```{r}
+d <- mv_extract_exposures(c("ieu-a-1239", "ukb-b-11615"))
+o <- extract_outcome_data(d$SNP, "ukb-b-1209")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+```{r}
+d <- mv_extract_exposures(c("ieu-a-1239", "ukb-b-16489"))
+o <- extract_outcome_data(d$SNP, "ukb-b-1209")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+
+Qualification effect is explained by years of schooling for no qualifications or A level. However, having a degree is more important.
+
+## Income and degree
+
+```{r}
+d <- mv_extract_exposures(c("ukb-b-16489", "ukb-b-7408"))
+o <- extract_outcome_data(d$SNP, "ukb-b-1209")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+
+Income effect is explained by having a degree level qualification.
+
+Overall, having a degree explains the difference in number of children for this section.
