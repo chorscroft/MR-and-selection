@@ -64,7 +64,7 @@ d_mr
 mr_scatter_plot(d_mr,d)
 ```
 
-Still a strong relationship
+Still a strong relationship. Number of SNPs dropped from 165 to 114.
 
 ## Effect of degree on intelligence
 
@@ -88,7 +88,7 @@ d_mr
 mr_scatter_plot(d_mr,d)
 ```
 
-Still a strong relationship.
+Still a strong relationship. Number of SNPs dropped from 253 to 85, meaning 2/3 of the degree SNPs explained more variance in intelligence.
 
 Therefore, having a degree and intelligence cause each other, but having a degree is more important in terms of number of children.
 
