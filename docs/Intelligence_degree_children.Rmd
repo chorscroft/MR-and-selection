@@ -13,7 +13,7 @@ library(TwoSampleMR)
 
 ## Effect of intelligence on number of children
 
-```{r }
+```{r}
 d <- make_dat("ebi-a-GCST006250", "ieu-b-4760")
 d_mr<-mr(d)
 d_mr
@@ -53,6 +53,19 @@ mr_scatter_plot(d_mr,d)
 
 Very strong relationship
 
+Now apply Steiger filtering
+
+```{r }
+d <- make_dat("ebi-a-GCST006250", "ukb-b-16489")
+d <- steiger_filtering(d)
+d<-d[d$steiger_dir==TRUE & d$steiger_pval<0.05,]
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Still a strong relationship
+
 ## Effect of degree on intelligence
 
 ```{r }
@@ -63,6 +76,19 @@ mr_scatter_plot(d_mr,d)
 ```
 
 Also a very strong relationship.
+
+Now apply Steiger filtering
+
+```{r }
+d <- make_dat("ukb-b-16489","ebi-a-GCST006250")
+d <- steiger_filtering(d)
+d<-d[d$steiger_dir==TRUE & d$steiger_pval<0.05,]
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Still a strong relationship.
 
 Therefore, having a degree and intelligence cause each other, but having a degree is more important in terms of number of children.
 
