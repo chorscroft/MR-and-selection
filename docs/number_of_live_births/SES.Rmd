@@ -73,6 +73,7 @@ o <- extract_outcome_data(d$SNP, "ukb-b-1209")
 d <- mv_harmonise_data(d, o)
 mv_multiple(d)
 ```
+
 Income attenuates. Income effect on number of children is mostly explained by years of schooling.
 
 ## Age completed full time education
