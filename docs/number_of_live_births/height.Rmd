@@ -43,3 +43,20 @@ d_mr
 mr_scatter_plot(d_mr,d)
 ```
 
+Height is highly negatively associated with number of children.
+
+## Is it explained by BMI?
+
+BMI is weight/height^2, so as high BMI -> more children, you'd expect either:
+* higher weight to associate with more children (no evidence), or
+* higher height to associate with less children (evidence above)
+Which is most important, BMI or height?
+
+```{r}
+d <- mv_extract_exposures(c("ukb-b-19953", "ukb-b-10787"))
+o <- extract_outcome_data(d$SNP, "ukb-b-1209")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+
+Affect of BMI attenuates when height is added to the model.
