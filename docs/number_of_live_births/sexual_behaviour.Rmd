@@ -46,3 +46,23 @@ mr_scatter_plot(d_mr,d)
 ```
 
 Very highly related
+
+Does Age first had sexual intercourse predict Age at first live birth?
+
+```{r }
+d <- make_dat("ukb-b-6591", "ukb-b-12405")
+d_mr<-mr(d)
+d_mr
+mr_scatter_plot(d_mr,d)
+```
+
+Which is more important?
+
+```{r}
+d <- mv_extract_exposures(c("ukb-b-12405", "ukb-b-6591"))
+o <- extract_outcome_data(d$SNP, "ukb-b-1209")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+
+Age at first live birth is more important, but age first had sexual intercourse is highly predictive. The latter has more associated SNPs.
