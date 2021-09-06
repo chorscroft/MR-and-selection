@@ -60,3 +60,12 @@ mr_scatter_plot(d_mr,d)
 ```
 
 Results show that having more childhood sunburn occasions is negatively related with number of children. Ease of tanning is also negatively related. Having darker skin is positively related.
+
+```{r}
+d <- mv_extract_exposures(c("ukb-b-533", "ukb-b-19560"))
+o <- extract_outcome_data(d$SNP, "ukb-b-2227")
+d <- mv_harmonise_data(d, o)
+mv_multiple(d)
+```
+
+Ease of skin tanning is more important.
