@@ -1,0 +1,106 @@
+---
+title: "Proportion of variance explained"
+author: "Clare Horscroft"
+date: "19/08/2021"
+output: html_document
+---
+
+Find the GWAS hits for the three variables of interest:
+
+* Number of children
+* Number of children fathered
+* Number of live births
+
+What is the proportion of variance explained by the SNPs identified in the GWAS?
+
+Proportion of variance is calculated 3 ways: using the get_r_from_pn() and get_r_from_bsen() functions from the TwoSampleMR package, and the formula below from the linked paper: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0120758#sec017
+Supplementary info gives this formula for proportion of variance explained:
+
+$$
+PVE = \frac{2\beta^2MAF(1-MAF)}{2\beta^2MAF(1-MAF)+2Nse^2MAF(1-MAF)}
+$$
+
+```{r setup}
+library(rms2)
+library(TwoSampleMR)
+library(jsonlite)
+# Get file path to project file 
+config <- read_json("~/config.json")
+mr_sel_path <- config$mr_sel_path
+```
+
+```{r initialise}
+no_children <- rms2$new("ieu-b-4760")
+no_live_births <- rms2$new("ukb-b-1209")
+no_fathered <- rms2$new("ukb-b-2227")
+```
+
+```{r function}
+prop_var_expl<-function(x){
+  pve<-(2*(x$gwashits$beta^2)*x$gwashits$eaf*(1-x$gwashits$eaf))/(2*(x$gwashits$beta^2)*x$gwashits$eaf*(1-x$gwashits$eaf)+2*x$gwashits$n*(x$gwashits$se^2)*x$gwashits$eaf*(1-x$gwashits$eaf))
+  return(list(
+  pve=pve,
+  pve_r_pn=get_r_from_pn(x$gwashits$p,x$gwashits$n)^2,
+  pve_r_bsen=get_r_from_bsen(x$gwashits$beta,x$gwashits$se,x$gwashits$n)^2
+  ))
+}
+```
+
+
+## GWAS hits for number of children
+
+```{r gwas_no_children}
+no_children$extract_gwashits()
+no_children$gwashits$n<-460654
+no_children$gwashits
+```
+
+#### Proportion of variance explained
+
+```{r pve_no_children}
+no_children_pve<-prop_var_expl(no_children)
+barplot(rbind(no_children_pve$pve,no_children_pve$pve_r_pn,no_children_pve$pve_r_bsen),beside = TRUE,names.arg = 1:length(no_children_pve$pve),legend.text = c("pve","pve_r_pn","pve_r_bsen"),main="Number of children",xlab="GWAS hit",ylab="Proportion of variance explained")
+```
+
+## GWAS hits for number of children fathered
+
+```{r gwas_no_fathered}
+no_fathered$extract_gwashits()
+no_fathered$gwashits
+```
+
+#### Proportion of variance explained
+
+```{r pve_no_fathered}
+no_fathered_pve<-prop_var_expl(no_fathered)
+barplot(rbind(no_fathered_pve$pve,no_fathered_pve$pve_r_pn,no_fathered_pve$pve_r_bsen),beside = TRUE,names.arg = 1:length(no_fathered_pve$pve),legend.text = c("pve","pve_r_pn","pve_r_bsen"),main="Number of children fathered",xlab="GWAS hit",ylab="Proportion of variance explained")
+```
+
+## GWAS hits for number of live births
+
+```{r gwas_no_live_births}
+no_live_births$extract_gwashits()
+no_live_births$gwashits
+```
+
+#### Proportion of variance explained
+
+```{r pve_no_live_births}
+no_live_births_pve<-prop_var_expl(no_live_births)
+barplot(rbind(no_live_births_pve$pve,no_live_births_pve$pve_r_pn,no_live_births_pve$pve_r_bsen),beside = TRUE,names.arg = 1:length(no_live_births_pve$pve),legend.text = c("pve","pve_r_pn","pve_r_bsen"),main="Number of live births",xlab="GWAS hit",ylab="Proportion of variance explained")
+```
+
+## Total variance explained
+
+```{r}
+barplot(cbind(sapply(no_children_pve,sum),
+      sapply(no_fathered_pve,sum),
+      sapply(no_live_births_pve,sum)),beside=TRUE,
+      names.arg = c("no_children","no_fathered","no_live_births"),
+      legend.text = c("pve","pve_r_pn","pve_r_bsen"),
+      args.legend = list(x="top"),
+      main="Total variance explained",
+      ylab="Proportion of variance explained",
+      ylim=c(0,0.002))
+```
+
