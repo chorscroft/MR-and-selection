@@ -1,5 +1,5 @@
 ---
-title: Number of children as a meeasure of fitness - is it asymptotically unbiased?
+title: Number of children as a measure of fitness - is it asymptotically unbiased?
 author: Clare Horscroft
 ---
 
