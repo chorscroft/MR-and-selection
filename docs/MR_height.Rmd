@@ -1,0 +1,75 @@
+---
+title: "Height and number of children"
+output: html_notebook
+---
+
+```{r}
+library(TwoSampleMR)
+library(ieugwasr)
+library(dplyr)
+```
+
+
+```{r}
+# Standing height
+standing_height <- "ukb-b-10787"
+gwasinfo(standing_height) %>% str()
+```
+
+```{r}
+sitting_height <- "ukb-b-16881"
+gwasinfo(sitting_height) %>% str()
+```
+
+```{r}
+ch_men <- "ukb-b-2227"
+gwasinfo(ch_men) %>% str()
+```
+
+
+```{r}
+ch_women <- "ukb-b-1209"
+gwasinfo(ch_women) %>% str()
+```
+
+
+```{r}
+ch <- "ieu-b-4760"
+gwasinfo(ch) %>% str()
+```
+
+```{r}
+exp <- extract_instruments(c(standing_height, sitting_height))
+out <- extract_outcome_data(exp$SNP, c(ch_women, ch_men, ch))
+dat <- harmonise_data(exp, out)
+res <- mr(dat, method="mr_ivw")
+res %>%
+	select(exposure, outcome, nsnp, b, se, pval)
+```
+
+Women
+
+```{r}
+mvexp <- mv_extract_exposures(c(sitting_height, standing_height))
+mvout <- extract_outcome_data(mvexp$SNP, c(ch_women))
+mvdat <- mv_harmonise_data(mvexp, mvout)
+mv_multiple(mvdat)
+```
+
+Men
+
+```{r}
+mvout <- extract_outcome_data(mvexp$SNP, c(ch_men))
+mvdat <- mv_harmonise_data(mvexp, mvout)
+mv_multiple(mvdat)
+```
+
+
+Both
+
+```{r}
+mvout <- extract_outcome_data(mvexp$SNP, c(ch))
+mvdat <- mv_harmonise_data(mvexp, mvout)
+mv_multiple(mvdat)
+```
+

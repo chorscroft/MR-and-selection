@@ -1,0 +1,356 @@
+---
+title: "Confusion"
+author: "Clare Horscroft"
+date: "29/11/2021"
+output: html_notebook
+---
+
+```{r}
+library(TwoSampleMR)
+library(knitr)
+library(dplyr)
+```
+
+Somewhere else Clare showed that the LM only approximates GLM at smaller effect sizes. In these sims `bgx = 5` was used which is very large, and so the SNP-outcome effect is large also (5 * 0.1 = 0.5). The only issue is in estimating the bgy effect, and we want to use number of children to estimate the effect of the SNP on the liability (fitness) accurately. So does this relationship work at small effect sizes and then break down at large effect sizes?
+
+```{r}
+sim <- function(nid, s, af, bgx)
+{
+  g<-rbinom(nid,2,af)
+  x<-bgx*g#+rnorm(nid)     # trait value
+  fit<-1+x*s
+  p1<-sample(1:nid,nid,TRUE,fit)
+  p2<-sample(1:nid,nid,TRUE,fit)
+  number_of_children <- rep(0,nid)
+  tabParents <- table(c(p1,p2))
+  number_of_children[as.numeric(unlist(dimnames(tabParents)))] <- tabParents
+  mod_fit_gy<-lm(fit~g)
+  mod_glm_gy<-glm(number_of_children~g,family=poisson("log"))
+  mod_lm_gy <- lm(number_of_children~g)
+  return(tibble(fit_lm=mod_fit_gy$coef[2], kid_pois=mod_glm_gy$coef[2], kid_lm=mod_lm_gy$coef[2]/2))
+}
+
+param <- expand.grid(
+  nid=10000,
+  s=0.1,
+  bgx=seq(-5,5,by=0.05),
+  af=0.3
+)
+
+o <- lapply(1:nrow(param), function(i) do.call(sim, args=param[i,])) %>% bind_rows()
+
+my_line <- function(x,y,...){
+    points(x,y,...)
+    abline(a = 0,b = 1,...)
+}
+pairs(o, lower.panel = my_line, upper.panel = my_line)
+```
+So if you just look in the range of `-1 < bgx < 1` the number of children glm and lm models approximate the fitness lm model pretty well. 
+
+```{r}
+pairs(o[param$bgx > -1 & param$bgx < 1,], lower.panel = my_line, upper.panel = my_line)
+```
+
+The simulations below have been modified to have a bgx = 0.3 but increasing the sample size to 1 million so the precision is ~ the same as previously, and it seems to give results that agree across the different models. The mean number of children per genotype in the exponential model is essentially the same also.
+
+---
+
+First, set up a basic simulation. This contains 100,000 individuals, with genotype g = 0, 1, or 2, and a trait x which is always 0.3 times g. the fitness of the individual is 1+0.1x.
+
+```{r}
+set.seed(1023489)
+nid<-1000000           # Number of individuals
+s<-0.1              # selection strength for each unit of x
+g<-rbinom(nid,2,0.5)  # Genotype for each individual (0, 1, or 2)
+x<-0.3*g+rnorm(nid)     # trait value
+fit<-1+x*s
+```
+
+Next, assume that the next generation will contain 1,000,000 individuals, with the parents of these individuals chosen using the relative fitness values.
+
+```{r}
+# Sample the parents for each child, parent 1 and parent 2
+p1<-sample(1:nid,nid,TRUE,fit)
+p2<-sample(1:nid,nid,TRUE,fit)
+```
+
+Ascertain the child's genotype given the parents'
+
+```{r}
+# Function for simulating the genotype of a child given its parents
+get_child_g<-function(g1,g2){
+  g3<-rep(0,length(g1))
+  for (i in 1:length(g1)){
+    g3[i]<-sample(c(0,1),1,T,prob=c(2-g1[i],g1[i]))+sample(c(0,1),1,T,prob=c(2-g2[i],g2[i]))
+  }
+  return(g3)
+}
+# Get the child's genotype given the parents
+g_prime<-get_child_g(g[p1],g[p2])
+```
+
+Finally, calculate the number of children each individual had:
+
+```{r}
+# Extract the number of children each individual in the parent generation had
+number_of_children <- rep(0,nid)
+tabParents <- table(c(p1,p2))
+number_of_children[as.numeric(unlist(dimnames(tabParents)))] <- tabParents
+```
+
+Table showing the number of children by trait value x
+
+```{r}
+child_table<-tibble(
+  x=tapply(x, g, mean),
+  fit=tapply(fit,g,mean),
+  children=tapply(number_of_children, g, mean),
+  g=c(0,1,2)
+)
+child_table$proportion<-child_table$children/child_table$children[1]
+knitr::kable(child_table, format="simple")
+```
+
+I want to test the equation involving the selection coefficient that were added to the paper, firstly by using the non-exponentiated version of fitness, then the exponentiated. For both tests, calcualte sel coeff using the straight fitness value, or the number of children
+
+```{r}
+#Set up results table
+result<-data.frame(s=c("s allele freq","s b_gx,cov_xw,var_x","s b_gx * b_xw"),no_exp_fit=c(NA,NA,NA),no_exp_child=c(NA,NA,NA),exp_fit=c(NA,NA,NA),exp_child=c(NA,NA,NA))
+```
+
+Perform MR
+
+```{r}
+## genotype to trait
+mod_gx<-summary(lm(x~g))
+b_gx<-mod_gx$coefficients[2,1]
+se_gx<-mod_gx$coefficients[2,2]
+
+## genotype to fitness
+mod_fit_gy<-summary(lm(fit~g))
+b_fit_gy<-mod_fit_gy$coefficients[2,1]
+se_fit_gy<-mod_fit_gy$coefficients[2,2]
+## Wald Ratio
+wr<-mr_wald_ratio(b_gx,b_fit_gy,se_gx,se_fit_gy)
+wr
+```
+
+Does this equation work?
+
+$$
+\Delta p_i = \frac{sp_i(1-p_i)}{1+2sp_i}
+$$
+
+d (1 + 2sp) = sp(1-p)
+d + 2dsp = sp(1-p)
+d = sp - sp^2 - 2dsp
+d = s(p - p^2 - 2dp)
+s = d / (p - p^2 - 2dp)
+
+Rearrange to find selection coefficient
+
+$$
+s_i = \frac{\Delta p_i}{p_i(1-p_i)-2p_i\Delta p_i}
+$$
+
+```{r}
+## allele frequency of parents
+af<-sum(g)/(2*nid)
+## allele frequency of children
+af_prime<-sum(g_prime)/(2*nid)
+##
+delta_af<-af_prime-af
+sel_coeff<-delta_af/(af*(1-af)-2*af*delta_af)
+sel_coeff
+result$no_exp_fit[1]<-sel_coeff
+```
+
+Does this equation work?
+
+$$
+s_i = \frac{\beta_{gx}cov(x,w)}{var(x)}
+$$
+
+```{r}
+beta_gx <- summary(lm(x~g))$coefficients[2,1]
+cov_xw <- mean(x*fit)-mean(x)*mean(fit)
+var_x <- mean(x^2)-mean(x)^2
+sel_coeff <- beta_gx*cov_xw/var_x
+sel_coeff
+result$no_exp_fit[2]<-sel_coeff
+```
+
+Does this equation work?
+
+$$
+s_i = \beta_{gx}\beta_{xw} 
+$$
+
+```{r}
+sel_coeff <- beta_gx*wr$b
+sel_coeff
+result$no_exp_fit[3]<-sel_coeff
+```
+
+All the sel_coeffs are the same 
+
+What about using number of children?
+
+```{r}
+
+## genotype to trait
+mod_gx<-summary(lm(x~g))
+b_gx<-mod_gx$coefficients[2,1]
+se_gx<-mod_gx$coefficients[2,2]
+
+## genotype to number of children (glm method)
+mod_glm_gy<-summary(glm(number_of_children~g,family=poisson("log")))
+b_glm_gy<-mod_glm_gy$coefficients[2,1]
+se_glm_gy<-mod_glm_gy$coefficients[2,2]
+## Wald Ratio
+wr1<-mr_wald_ratio(b_gx,b_glm_gy,se_gx,se_glm_gy)
+wr1
+```
+
+
+```{r}
+## allele frequency of parents
+af<-sum(g)/(2*nid)
+## allele frequency of children
+af_prime<-sum(g_prime)/(2*nid)
+##
+delta_af<-af_prime-af
+sel_coeff<-delta_af/(af*(1-af)-2*af*delta_af)
+sel_coeff
+result$no_exp_child[1]<-sel_coeff
+
+beta_gx <- summary(lm(x~g))$coefficients[2,1]
+cov_xw <- mean(x*number_of_children)-mean(x)*mean(number_of_children)
+var_x <- mean(x^2)-mean(x)^2
+sel_coeff <- beta_gx*cov_xw/var_x
+sel_coeff
+result$no_exp_child[2]<-sel_coeff
+
+sel_coeff <- beta_gx*wr1$b
+sel_coeff
+result$no_exp_child[3]<-sel_coeff
+```
+
+Doesn't work - try doing simulation with fitness exponentiated
+
+```{r}
+set.seed(102348)
+nid<-1000000           # Number of individuals
+s<-0.1              # selection strength for each unit of x
+g<-rbinom(nid,2,0.5)  # Genotype for each individual (0, 1, or 2)
+x<-0.3*g#+rnorm(nid)     # trait value
+fit<-1+x*s
+
+# Sample the parents for each child, parent 1 and parent 2
+p1<-sample(1:nid,nid,TRUE,exp(fit))
+p2<-sample(1:nid,nid,TRUE,exp(fit))
+
+# Get the child's genotype given the parents
+g_prime<-get_child_g(g[p1],g[p2])
+
+# Extract the number of children each individual in the parent generation had
+number_of_children <- rep(0,nid)
+tabParents <- table(c(p1,p2))
+number_of_children[as.numeric(unlist(dimnames(tabParents)))] <- tabParents
+```
+
+Table showing the number of children by trait value x
+
+```{r}
+child_table<-tibble(
+  x=tapply(x, g, mean),
+  fit=tapply(fit,g,mean),
+  children=tapply(number_of_children, g, mean),
+  g=c(0,1,2)
+)
+child_table$proportion<-child_table$children/child_table$children[1]
+knitr::kable(child_table, format="simple")
+```
+
+Do the equations work for fitness?
+
+```{r}
+## genotype to trait
+mod_gx<-summary(lm(x~g))
+b_gx<-mod_gx$coefficients[2,1]
+se_gx<-mod_gx$coefficients[2,2]
+
+## genotype to fitness
+mod_fit_gy<-summary(lm(fit~g))
+b_fit_gy<-mod_fit_gy$coefficients[2,1]
+se_fit_gy<-mod_fit_gy$coefficients[2,2]
+## Wald Ratio
+wr<-mr_wald_ratio(b_gx,b_fit_gy,se_gx,se_fit_gy)
+wr
+
+## allele frequency of parents
+af<-sum(g)/(2*nid)
+## allele frequency of children
+af_prime<-sum(g_prime)/(2*nid)
+##
+delta_af<-af_prime-af
+sel_coeff<-delta_af/(af*(1-af)-2*af*delta_af)
+sel_coeff
+result$exp_fit[1]<-sel_coeff
+
+beta_gx <- summary(lm(x~g))$coefficients[2,1]
+cov_xw <- mean(x*fit)-mean(x)*mean(fit)
+var_x <- mean(x^2)-mean(x)^2
+sel_coeff <- beta_gx*cov_xw/var_x
+sel_coeff
+result$exp_fit[2]<-sel_coeff
+
+sel_coeff <- beta_gx*wr$b
+sel_coeff
+result$exp_fit[3]<-sel_coeff
+```
+
+What about using number of children?
+
+```{r}
+## genotype to trait
+mod_gx<-summary(lm(x~g))
+b_gx<-mod_gx$coefficients[2,1]
+se_gx<-mod_gx$coefficients[2,2]
+
+## genotype to number of children (glm method)
+mod_glm_gy<-summary(glm(number_of_children~g,family=poisson("log")))
+b_glm_gy<-mod_glm_gy$coefficients[2,1]
+se_glm_gy<-mod_glm_gy$coefficients[2,2]
+## Wald Ratio
+wr1<-mr_wald_ratio(b_gx,b_glm_gy,se_gx,se_glm_gy)
+wr1
+
+## allele frequency of parents
+af<-sum(g)/(2*nid)
+## allele frequency of children
+af_prime<-sum(g_prime)/(2*nid)
+##
+delta_af<-af_prime-af
+sel_coeff<-delta_af/(af*(1-af)-2*af*delta_af)
+sel_coeff
+result$exp_child[1]<-sel_coeff
+
+beta_gx <- summary(lm(x~g))$coefficients[2,1]
+cov_xw <- mean(x*number_of_children)-mean(x)*mean(number_of_children)
+var_x <- mean(x^2)-mean(x)^2
+sel_coeff <- beta_gx*cov_xw/var_x
+sel_coeff
+result$exp_child[2]<-sel_coeff
+
+sel_coeff <- beta_gx*wr1$b
+sel_coeff
+result$exp_child[3]<-sel_coeff
+```
+
+Results in table
+
+```{r}
+knitr::kable(result, format="simple")
+```
+
