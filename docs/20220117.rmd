@@ -1,0 +1,280 @@
+---
+title: "Parameterising data generating model"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(simulateGP)
+```
+
+
+This model defines the liability
+
+$$
+l = \mu + Xb + e
+$$
+
+where $X$ is the centred matrix of genotypes, $\mu$ is the mean fitness on the liability scale in the population, $b$ is the a vector of genetic effects on fitness, also selection coefficients for alleles, $e$ is an overdispersion parameter.
+
+$$
+h^2_l = \frac{\sum^M_j 2p_j(1-p_j)b_j^2}{\sigma^2_e}
+$$
+and
+
+$$
+V_{P,l} = \sum^M_j 2p_j(1-p_j)b_j^2 + \sigma^2_e = \sigma^2_a + \sigma^2_e
+$$
+
+The expected data scale is 
+
+$$
+\nu = exp(l)
+$$
+
+and the observed data scale, number of children, is
+
+$$
+z = Pois(\nu)
+$$
+
+The mean and variance of $z$ are expected to be the same ($\lambda$).
+
+Should be able to calculate the mean and variance of $l$ by
+
+$$
+\lambda = exp(\mu + V_{P,l}/2)
+$$
+
+So let's see if that works
+
+```{r}
+param <- expand.grid(
+  lambda = seq(0.1, 3, by=0.1), 
+  mu = seq(-1, 1, by=0.1)
+)
+param$vp <- 2 * (log(param$lambda) - param$mu)
+param <- subset(param, vp > 0 & vp < 0.4)
+dim(param)
+summary(param)
+ggplot(param, aes(x=mu, y=vp, group=lambda)) +
+  geom_line(aes(colour=as.factor(lambda)))
+```
+Each line should continue beyond what is plotted however this just shows the parameter ranges that were selected for analysis.
+
+```{r}
+data_generating_model <- function(nid, lambda, mu, vp)
+{
+  dat <- tibble(
+    l = rnorm(nid, mu, sqrt(vp)),
+    nu = exp(l),
+    z1 = rpois(nid, nu),
+    z2 = 0
+  )
+  tab <- table(sample(1:nid, lambda*nid, replace=TRUE, prob=dat$nu))
+  dat$z2[as.numeric(unlist(dimnames(tab)))] <- tab
+  
+  tibble(
+    lambda=lambda,
+    mu=mu,
+    vp=vp,
+    z1_mean = mean(dat$z1),
+    z1_var = var(dat$z1),
+    nu_mean = mean(dat$nu),
+    nu_var = var(dat$nu),
+    z2_mean = mean(dat$z2),
+    z2_var = var(dat$z2)
+  )
+}
+```
+
+Example run (where lambda, va and mu were selected randomly and don't actually adhere to the rule above)
+
+```{r}
+data_generating_model(10000, 2, 0.7, 0.1)
+```
+Run simulations
+
+```{r}
+res <- lapply(1:nrow(param), function(i)
+{
+  data_generating_model(10000, param$lambda[i], param$mu[i], param$vp[i])
+}) %>% bind_rows()
+res
+```
+
+```{r}
+ggplot(res, aes(x=z1_mean, y=z1_var)) +
+  geom_point(aes(colour=vp)) +
+  geom_abline(slope=1, intercept=0)
+```
+
+Ok so when the variance of the liability is 0 then the mean = variance. This is because every individual has the same fitness, and therefore everyone's number of children is drawn from the same parameter i.e. it's a single poisson distribution. When fitness varies then everyone has a different lambda value, and while the mean lambda value stays the same the variance of the mixture of poissons is larger than then expected variance for a single poisson.
+
+```{r}
+ggplot(res, aes(x=z1_var, z2_var)) +
+  geom_point(aes(colour=vp)) +
+  geom_abline(slope=1, intercept=0)
+```
+
+```{r}
+ggplot(res, aes(x=z1_mean, z2_mean)) +
+  geom_point(aes(colour=vp)) +
+  geom_abline(slope=1, intercept=0)
+```
+
+The sample vs poisson methods are basically identical now
+
+```{r}
+ggplot(res, aes(x=lambda, y=z1_mean)) +
+  geom_point(aes(colour=vp)) +
+  geom_abline(slope=1, intercept=0)
+```
+So this does work but it stops working when $V_{P,l}$ starts to get a bit higher than 0.1. What about the variance of the expected data variable
+
+$$
+E[exp(X)] = exp(\mu + \sigma^2/2)
+$$
+and
+
+$$
+Var[exp(X)] = (exp(\sigma^2) - 1)exp(2\mu + \sigma^2)
+$$
+
+```{r}
+ggplot(res, aes(x=nu_mean, y=z1_mean)) +
+  geom_point()
+```
+
+```{r}
+ggplot(res, aes(x=nu_var, y=z1_var)) +
+  geom_point()
+```
+
+```{r}
+res$expected_nu_mean <- exp(res$mu + res$vp/2)
+ggplot(res, aes(x=expected_nu_mean, y=nu_mean)) +
+  geom_point()
+```
+
+```{r}
+res$expected_nu_var <- (exp(res$vp)-1)*exp(2*res$mu+res$vp)
+ggplot(res, aes(x=expected_nu_var, y=nu_var)) +
+  geom_point()
+```
+
+
+
+## The genetic model
+
+So genetic variance is
+
+$$
+V_A = \sum^M_j 2p_j(1-p_j)\beta^2
+$$
+
+How should the $\beta$ values be sampled?
+
+$$
+\beta_j \sim N\left(0, \sigma^2_b \left(\frac{2p_j(1-p_j)}{M} \right)^{S/2} \right)
+$$
+
+for some set of variants that have a distribution of allele frequencies. Need to choose some arbitrary value $\sigma^2_b$ that will lead to desired $V_A$.
+
+## Example
+
+Let's simulate some beta values for fitness, according to some expected model and that give rise to a specified Va. Then estimate the effects using a linear model on the number of children (where number of children is sampled using poisson or sample methods).
+
+```{r}
+genetic_model <- function(nid, nsnp, va, ve, mu, lambda)
+{
+  stopifnot(lambda == exp(mu + (va+ve)/2))
+  af <- runif(nsnp, 0.01, 0.99)
+  g <- do.call(cbind, lapply(af, function(p) rbinom(nid, 2, p)))
+  g <- t(t(g) - colMeans(g))
+  
+  b <- rnorm(nsnp, 0, (2*af*(1-af))^(va/2))
+  x <- sqrt(sum(2 * af * (1-af) * (b)^2))
+  b <- b * sqrt(va)/x
+  sum(2 * af * (1-af) * (b)^2)
+
+  dat <- tibble(
+    gbv = drop(g %*% b),
+    e = rnorm(nid, 0, sqrt(ve)),
+    l = mu + gbv + e,
+    nu = exp(l),
+    z1 = rpois(nid, nu),
+    z2 = 0
+  )
+  tab <- table(sample(1:nid, lambda*nid, replace=TRUE, prob=dat$nu))
+  dat$z2[as.numeric(unlist(dimnames(tab)))] <- tab
+
+  res1 <- simulateGP::gwas(dat$z1, g)
+  res2 <- simulateGP::gwas(dat$z2, g)
+  tibble(
+    lambda=lambda,
+    mu=mu,
+    vp=vp,
+    va=va,
+    ve=ve,
+    nid=nid,
+    nsnp=nsnp,
+    z1_mean = mean(dat$z1),
+    z1_var = var(dat$z1),
+    nu_mean = mean(dat$nu),
+    nu_var = var(dat$nu),
+    z2_mean = mean(dat$z2),
+    z2_var = var(dat$z2),
+    bhat1=lm(res1$bhat ~ b)$coef[2]/lambda,
+    bhat2=lm(res2$bhat ~ b)$coef[2]/lambda
+  )
+}
+```
+
+Set parameters e.g. vary heritability, mu, lambda, va
+
+```{r}
+param <- expand.grid(
+  nid = 50000,
+  nsnp = c(1, 2, 3, 4, 5, 10, 50, 100, 500),
+  ve = c(0, 0.15),
+  mu = seq(-1, 1, by=0.3),
+  lambda = seq(0.1, 3, by=0.3)
+)
+param$vp <- 2 * (log(param$lambda) - param$mu)
+param$va <- param$vp - param$ve
+param <- subset(param, vp > 0 & vp < 0.4 & va > 0)
+dim(param)
+summary(param)
+
+out <- lapply(1:nrow(param), function(i)
+{
+  do.call(genetic_model, param %>% select(-vp) %>% {.[i, ]})
+}) %>% bind_rows()
+```
+
+```{r}
+tibble(agreement=c(out$bhat1, out$bhat2), what=rep(c("poisson", "sample"), each=nrow(out))) %>%
+  ggplot(., aes(y=agreement, x=what)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(out, aes(x=nsnp, y=bhat1)) +
+  geom_point(aes(colour=va)) +
+  scale_x_log10()
+```
+
+Ok I'm not getting a problem here, the effect sizes are small enough even in the 2 SNP case?
+
+## Summary
+
+- Fitness can be normally distributed with some mean and variance
+- Variance = additive variance + over dispersion
+- Additive variance is equivalent to selection coefficient in breeder's equation when trait is fitness
+- Random noise is introduced when translating from fitness to number of children
+- Parameters of fitness distribution can be mapped to parameters of the observed data
+- Expect that number of children is not poissonly distributed when variance in fitness is not zero because everyone has a slightly different lambda and the mixture poissons gives rise to larger variance than expected under a single poisson.
+- Method using sample and method using poisson will give rise to the same overall process (same distributions of children etc)
+- Estimating genetic effects on observed data using a linear model in a polygenic context approximates simulated effects on fitness *provided that beta is divided by the mean number of children* - this has not been done
+
