@@ -8,6 +8,18 @@ library(tidyverse)
 library(simulateGP)
 ```
 
+## Objective
+
+A data generating model that will
+
+- give rise to polygenic genetic effects on fitness (latent liability scale)
+- which lead to an expected distribution of number of children
+- whether generated from a Poisson sampling process or by allocating children to parents using the `sample` procedure
+- and where the genetic effects estimated on the observed data scale can be translated back to the effects simulated for fitness
+
+Note that absolute genetic variance needs to be specified as this relates to the selection coefficient (not heritability, which is agnostif of scale).
+
+## Models
 
 This model defines the liability
 
@@ -130,7 +142,8 @@ ggplot(res, aes(x=lambda, y=z1_mean)) +
   geom_point(aes(colour=vp)) +
   geom_abline(slope=1, intercept=0)
 ```
-So this does work but it stops working when $V_{P,l}$ starts to get a bit higher than 0.1. What about the variance of the expected data variable
+
+What about the variance of the expected data scale of a log normal distribution (after exponentiating the normal liability scale to get the expected data scale)
 
 $$
 E[exp(X)] = exp(\mu + \sigma^2/2)
@@ -163,11 +176,11 @@ ggplot(res, aes(x=expected_nu_var, y=nu_var)) +
   geom_point()
 ```
 
-
+The expected data scale and liability scales translate as expected.
 
 ## The genetic model
 
-So genetic variance is
+The liability is a distribution that is comprised of genetic factors and some overdispersion variance. So total genetic variance is
 
 $$
 V_A = \sum^M_j 2p_j(1-p_j)\beta^2
@@ -179,11 +192,11 @@ $$
 \beta_j \sim N\left(0, \sigma^2_b \left(\frac{2p_j(1-p_j)}{M} \right)^{S/2} \right)
 $$
 
-for some set of variants that have a distribution of allele frequencies. Need to choose some arbitrary value $\sigma^2_b$ that will lead to desired $V_A$.
+Need to choose some arbitrary value $\sigma^2_b$ that will lead to desired $V_A$.
 
-## Example
+## Simulation example
 
-Let's simulate some beta values for fitness, according to some expected model and that give rise to a specified Va. Then estimate the effects using a linear model on the number of children (where number of children is sampled using poisson or sample methods).
+Let's simulate some genetic effects for fitness using a polygenic model as above, that gives rise to a specified Va. Then estimate the effects using a linear model on the number of children (where number of children is sampled using poisson or sample methods).
 
 ```{r}
 genetic_model <- function(nid, nsnp, va, ve, mu, lambda)
@@ -246,18 +259,30 @@ param$va <- param$vp - param$ve
 param <- subset(param, vp > 0 & vp < 0.4 & va > 0)
 dim(param)
 summary(param)
+```
 
+Run simulations
+
+```{r}
 out <- lapply(1:nrow(param), function(i)
 {
   do.call(genetic_model, param %>% select(-vp) %>% {.[i, ]})
 }) %>% bind_rows()
+str(out)
 ```
 
+Here `bhat1` is the relationship between estimated genetic effects on fitness, and true effects on fitness, where number of children is generated using `poisson`. And `bhat2` is where number of children is generated using `sample`. We want these values to be 1 - to indicate that we are getting unbiased estimates of fitness effects.
+
+How do the effects compare from sample and poisson
+
 ```{r}
-tibble(agreement=c(out$bhat1, out$bhat2), what=rep(c("poisson", "sample"), each=nrow(out))) %>%
-  ggplot(., aes(y=agreement, x=what)) +
-  geom_boxplot()
+plot(bhat1 ~ bhat2, out)
 ```
+```{r}
+summary(lm(bhat1 ~ bhat2, out))
+```
+
+Seems to be good agreement, but sometimes relationship is rather different from 1. Is this because some simulations only have a small number of variants (i.e. is not polygenic)?
 
 ```{r}
 ggplot(out, aes(x=nsnp, y=bhat1)) +
@@ -265,7 +290,7 @@ ggplot(out, aes(x=nsnp, y=bhat1)) +
   scale_x_log10()
 ```
 
-Ok I'm not getting a problem here, the effect sizes are small enough even in the 2 SNP case?
+Ok so once the number of SNPs is large then the estimates are very close to the simulated values.
 
 ## Summary
 
@@ -276,5 +301,7 @@ Ok I'm not getting a problem here, the effect sizes are small enough even in the
 - Parameters of fitness distribution can be mapped to parameters of the observed data
 - Expect that number of children is not poissonly distributed when variance in fitness is not zero because everyone has a slightly different lambda and the mixture poissons gives rise to larger variance than expected under a single poisson.
 - Method using sample and method using poisson will give rise to the same overall process (same distributions of children etc)
-- Estimating genetic effects on observed data using a linear model in a polygenic context approximates simulated effects on fitness *provided that beta is divided by the mean number of children* - this has not been done
+- Estimating genetic effects on observed data using a linear model in a polygenic context approximates simulated effects on fitness **provided that beta is divided by the mean number of children** - this has not been done in the recent Nature Human Behaviour paper so the genetic effects on fitness are likely to be 2-3 times over estimated. 
+
+
 

@@ -17,8 +17,12 @@ Somewhere else Clare showed that the LM only approximates GLM at smaller effect 
 sim <- function(nid, s, af, bgx)
 {
   g<-rbinom(nid,2,af)
-  x<-bgx*g#+rnorm(nid)     # trait value
-  fit<-1+x*s
+  x<-bgx*g+rnorm(nid)     # trait value
+  noise <- 0#+rnorm(nid)
+  fit <- 1+x*s + noise
+  print(sd(fit))
+  fit <- (fit - min(fit)) / sum(fit - min(fit))
+  print(sd(fit))
   p1<-sample(1:nid,nid,TRUE,fit)
   p2<-sample(1:nid,nid,TRUE,fit)
   number_of_children <- rep(0,nid)
@@ -27,13 +31,13 @@ sim <- function(nid, s, af, bgx)
   mod_fit_gy<-lm(fit~g)
   mod_glm_gy<-glm(number_of_children~g,family=poisson("log"))
   mod_lm_gy <- lm(number_of_children~g)
-  return(tibble(fit_lm=mod_fit_gy$coef[2], kid_pois=mod_glm_gy$coef[2], kid_lm=mod_lm_gy$coef[2]/2))
+  return(tibble(fit_lm=mod_fit_gy$coef[2], kid_pois=mod_glm_gy$coef[2], kid_lm=mod_lm_gy$coef[2]/2, dan=0.5 * kid_lm / (1-kid_lm * af)))
 }
 
 param <- expand.grid(
   nid=10000,
   s=0.1,
-  bgx=seq(-5,5,by=0.05),
+  bgx=seq(-5,5,by=0.1),
   af=0.3
 )
 

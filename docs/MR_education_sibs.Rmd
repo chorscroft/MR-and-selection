@@ -1,0 +1,29 @@
+
+```{r}
+library(TwoSampleMR)
+library(ggplot2)
+library(ieugwasr)
+
+gwasinfo("ieu-b-4828")
+gwasinfo("ieu-b-4827")
+gwasinfo("ieu-b-4760")
+gwasinfo("ieu-a-1239")
+
+
+dat <- make_dat("ieu-a-1239", c("ieu-b-4760", "ieu-b-4828", "ieu-b-4827"))
+
+res <- mr(dat)
+res
+
+res$outcome[res$id.outcome=="ieu-b-4760"] <- "Full population"
+res$outcome[res$id.outcome=="ieu-b-4828"] <- "Restricted population"
+res$outcome[res$id.outcome=="ieu-b-4827"] <- "Sibling"
+
+ggplot(res, aes(x=b, y=method)) +
+geom_point() +
+geom_errorbarh(aes(xmin=b-1.96*se, xmax=b+1.96*se), height=0) +
+geom_vline(xintercept=0, linetype="dotted") +
+facet_grid(outcome ~ .)
+
+```
+
