@@ -7,19 +7,78 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+```{r}
+require(jsonlite)
+# Get file path to project file 
+config <- read_json("~/config.json")
+mr_sel_path <- config$mr_sel_path
 ```
+
 
 ```{r setup}
 library(rms2)
 ```
 
+
+# Number of children
+
 Create new rms2 class for the outcome GWAS of interest
-number of children fathered
+
+```{r}
+x <- rms2$new("ieu-b-4760")
+```
+
+Get the GWAS hits for that dataset
+
+```{r}
+x$extract_gwashits()
+x$gwashits
+```
+
+## Run MR analysis on all hits
+
+```{r}
+for (hit in 1:nrow(x$gwashits)){
+  # Scan OpenGWAS for associations with each GWAS hit
+  x$scan_rsid(x$gwashits$rsid[hit])
+  if (nrow(x$rsid_scan[[x$gwashits$rsid[hit]]])>0){
+    # Perform colocalisation for each of the candidate associations
+    x$coloc_scan(x$gwashits$rsid[hit])
+    # Perform MR for all the candidate traits
+    x$mr(x$gwashits$rsid[hit], exclude_rsid_region=TRUE)
+    # Perform multivariable MR of candidate traits. 
+    # Excluding the alternative GWAS of number of children fathered (ukb-b-2227, ukb-a-304)
+    # and number of live births (ukb-b-1209) as these are synonymous with the outcome,
+    # and excluding traits that don't co-localise
+    traits_filter<-x$coloc_result[[x$gwashits$rsid[hit]]]$PP.H4.abf>0.8 &
+      x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-b-2227" &
+      x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-a-304" &
+      x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-b-1209"
+    x$mvmr(x$gwashits$rsid[hit],
+           traitlist=x$rsid_scan[[x$gwashits$rsid[hit]]]$id[traits_filter])
+    x$mvmr_lasso(x$gwashits$rsid[hit])
+  }
+}
+```
+
+## Write to Excel
+
+```{r, eval=FALSE}
+library(openxlsx)
+for(i in 1:length(x$mr_scan)){
+  wb<-createWorkbook()
+  addWorksheet(wb,"mr_scan")
+  writeData(wb,"mr_scan",x$mr_scan[[i]])
+  addWorksheet(wb,"mv_dat")
+  writeData(wb,"mv_dat",x$mv_dat[[i]]$result$result)
+  saveWorkbook(wb, paste0(mr_sel_path,"/rms2_analysis/Number_of_children_",names(x$mv_dat)[i],".xlsx"), overwrite = TRUE)
+}
+```
+
+# Number of children fathered
+
+Create new rms2 class for the outcome GWAS of interest
+
 ```{r}
 x <- rms2$new("ukb-b-2227")
 ```
@@ -30,6 +89,113 @@ Get the GWAS hits for that dataset
 x$extract_gwashits()
 x$gwashits
 ```
+
+## Run MR analysis on all hits
+
+```{r}
+for (hit in 1:nrow(x$gwashits)){
+  # Scan OpenGWAS for associations with each GWAS hit
+  x$scan_rsid(x$gwashits$rsid[hit])
+  if (nrow(x$rsid_scan[[x$gwashits$rsid[hit]]])>0){
+    # Perform colocalisation for each of the candidate associations
+    x$coloc_scan(x$gwashits$rsid[hit])
+    # Perform MR for all the candidate traits
+    x$mr(x$gwashits$rsid[hit], exclude_rsid_region=TRUE)
+    # Perform multivariable MR of candidate traits. 
+    # Excluding the alternative GWAS of number of children fathered (ukb-b-2227, ukb-a-304)
+    # and number of live births (ukb-b-1209) as these are synonymous with the outcome,
+    # and excluding traits that don't co-localise
+    traits_filter<-x$coloc_result[[x$gwashits$rsid[hit]]]$PP.H4.abf>0.8 &
+      x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ieu-b-4760" &
+      x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-a-304" &
+      x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-b-1209"
+    x$mvmr(x$gwashits$rsid[hit],
+           traitlist=x$rsid_scan[[x$gwashits$rsid[hit]]]$id[traits_filter])
+    x$mvmr_lasso(x$gwashits$rsid[hit])
+  }
+}
+```
+
+## Write to Excel
+
+```{r, eval=FALSE}
+library(openxlsx)
+for(i in 1:length(x$mr_scan)){
+  wb<-createWorkbook()
+  addWorksheet(wb,"mr_scan")
+  writeData(wb,"mr_scan",x$mr_scan[[i]])
+  addWorksheet(wb,"mv_dat")
+  writeData(wb,"mv_dat",x$mv_dat[[i]]$result$result)
+  saveWorkbook(wb, paste0(mr_sel_path,"/rms2_analysis/Number_of_children_fathered_",names(x$mv_dat)[i],".xlsx"), overwrite = TRUE)
+}
+```
+
+# Number of live births
+
+Create new rms2 class for the outcome GWAS of interest
+
+```{r}
+x <- rms2$new("ukb-b-1209")
+```
+
+Get the GWAS hits for that dataset
+
+```{r}
+x$extract_gwashits()
+x$gwashits
+```
+
+## Run MR analysis on all hits
+
+```{r}
+for (hit in 11:nrow(x$gwashits)){
+  # Scan OpenGWAS for associations with each GWAS hit
+  x$scan_rsid(x$gwashits$rsid[hit])
+  if (nrow(x$rsid_scan[[x$gwashits$rsid[hit]]])>0){
+    # Perform colocalisation for each of the candidate associations
+    x$coloc_scan(x$gwashits$rsid[hit])
+    # Perform MR for all the candidate traits
+    x$mr(x$gwashits$rsid[hit], exclude_rsid_region=TRUE)
+    # Perform multivariable MR of candidate traits. 
+    # Excluding the alternative GWAS of number of children fathered (ukb-b-2227, ukb-a-304)
+    # and number of live births (ukb-b-1209) as these are synonymous with the outcome,
+    # and excluding traits that don't co-localise
+    traits_filter<-x$coloc_result[[x$gwashits$rsid[hit]]]$PP.H4.abf>0.8 &
+      x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ieu-b-4760" &
+      x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-a-304" &
+      x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-b-2227"
+    x$mvmr(x$gwashits$rsid[hit],
+           traitlist=x$rsid_scan[[x$gwashits$rsid[hit]]]$id[traits_filter])
+    x$mvmr_lasso(x$gwashits$rsid[hit])
+  }
+}
+```
+
+## Write to Excel
+
+```{r, eval=FALSE}
+library(openxlsx)
+for(i in 1:length(x$mr_scan)){
+  wb<-createWorkbook()
+  addWorksheet(wb,"mr_scan")
+  writeData(wb,"mr_scan",x$mr_scan[[i]])
+  addWorksheet(wb,"mv_dat")
+  writeData(wb,"mv_dat",x$mv_dat[[i]]$result$result)
+  saveWorkbook(wb, paste0(mr_sel_path,"/rms2_analysis/Number_of_live_births_",names(x$mv_dat)[i],".xlsx"), overwrite = TRUE)
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## First hit
 
@@ -45,7 +211,7 @@ Perform colocalisation for each of the candidate associations
 
 ```{r}
 x$coloc_scan(x$gwashits$rsid[hit])
-x$coloc_result
+x$coloc_result[[x$gwashits$rsid[hit]]]
 ```
 
 Perform MR for all the candidate traits (though could also exclude the traits that don't colocalise)
@@ -55,10 +221,15 @@ x$mr(x$gwashits$rsid[hit], exclude_rsid_region=TRUE)
 x$mr_scan[[x$gwashits$rsid[hit]]] %>% dplyr::select(exposure, b, se, pval)
 ```
 
-Perform multivariable MR of candidate traits. Excluding the alternative GWAS of number of children fathered (ukb-a-304) and number of live births (ukb-b-1209) as this is synonymous with the outcome
+Perform multivariable MR of candidate traits. Excluding the alternative GWAS of number of children fathered (ukb-b-2227, ukb-a-304) and number of live births (ukb-b-1209) as this is synonymous with the outcome
 
 ```{r}
-x$mvmr(x$gwashits$rsid[hit], traitlist=x$rsid_scan[[x$gwashits$rsid[hit]]]$id[-c(77,105)])
+traits_filter<-x$coloc_result[[x$gwashits$rsid[hit]]]$PP.H4.abf>0.8 &
+x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-b-2227" &
+x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-a-307" &
+x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-b-1209"
+
+x$mvmr(x$gwashits$rsid[hit], traitlist=x$rsid_scan[[x$gwashits$rsid[hit]]]$id[traits_filter])
 x$mv_dat[[x$gwashits$rsid[hit]]][["result"]][[1]] %>% dplyr::select(exposure, b, se, pval)
 ```
 
@@ -70,6 +241,12 @@ x$mv_dat[[x$gwashits$rsid[hit]]][["result"]][[1]] %>% dplyr::select(exposure, b,
 ```
 
 Note that this might lead to under-estimated standard errors so it should be used for estimation rather than hypothesis testing
+
+
+
+
+
+
 
 
 ## Second hit
@@ -86,13 +263,7 @@ Perform colocalisation for each of the candidate associations
 
 ```{r}
 x$coloc_scan(x$gwashits$rsid[hit])
-x$coloc_result
-```
-
-Example of plotting a region (extracts LD matrix)
-
-```{r}
-x$plot_coloc(x$gwashits$rsid[hit], x$rsid_scan[[x$gwashits$rsid[hit]]]$id[1])
+x$coloc_result[[x$gwashits$rsid[hit]]]
 ```
 
 Perform MR for all the candidate traits (though could also exclude the traits that don't colocalise)
@@ -105,7 +276,12 @@ x$mr_scan[[x$gwashits$rsid[hit]]] %>% dplyr::select(exposure, b, se, pval)
 Perform multivariable MR of candidate traits. Excluding the alternative GWAS of number of children fathered as this is synonymous with the outcome
 
 ```{r}
-x$mvmr(x$gwashits$rsid[hit], traitlist=x$rsid_scan[[x$gwashits$rsid[hit]]]$id[-5])
+traits_filter<-x$coloc_result[[x$gwashits$rsid[hit]]]$PP.H4.abf>0.8 &
+x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-b-2227" &
+x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-a-307" &
+x$rsid_scan[[x$gwashits$rsid[hit]]]$id!="ukb-b-1209"
+
+x$mvmr(x$gwashits$rsid[hit], traitlist=x$rsid_scan[[x$gwashits$rsid[hit]]]$id[traits_filter])
 x$mv_dat[[x$gwashits$rsid[hit]]][["result"]][[1]] %>% dplyr::select(exposure, b, se, pval)
 ```
 
@@ -117,6 +293,13 @@ x$mv_dat[[x$gwashits$rsid[hit]]][["result"]][[1]] %>% dplyr::select(exposure, b,
 ```
 
 Note that this might lead to under-estimated standard errors so it should be used for estimation rather than hypothesis testing
+
+
+
+
+
+
+
 
 ## Third hit
 
