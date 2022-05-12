@@ -1,0 +1,90 @@
+---
+title: "Fitness is relative"
+output:
+  html_document:
+    df_print: paged
+---
+  
+Check that the 1 in the fitness formula is important.
+
+First set up parameters:
+Two genotypes with different effects on phenotype x.
+Phenotype x has a fitness effect of 0.05 for every unit above/below the mean.
+```{r}
+nparents <- 1000000
+nkids <- 1000000
+b_g1x <- 0.5
+b_g2x <- 0.2
+g1 <- rbinom(nparents, 2, 0.5)
+g2 <- rbinom(nparents, 2, 0.5)
+x <- 10 + g1 * b_g1x + g2 * b_g2x + rnorm(nparents)
+b_xfitness <- 0.05
+```
+
+Define multiple fitness equations with only the leading constant changed:
+```{r}
+fitness1 <- 1 + b_xfitness * (x - mean(x))
+fitness10 <- 10 + b_xfitness * (x - mean(x))
+fitness100 <- 100 + b_xfitness * (x - mean(x))
+fitness1000 <- 1000 + b_xfitness * (x - mean(x))
+```
+
+Calculate the number of children for each fitness equation:
+```{r}
+calcChildren<-function(fitness){
+  child_parent_1 <- sample(1:nparents, nkids, replace=TRUE, prob=fitness)
+  child_parent_2 <- sample(1:nparents, nkids, replace=TRUE, prob=fitness)
+  
+  parents_no_children<-rep(0,nparents)
+  tabParents<-table(c(child_parent_1,child_parent_2))
+  parents_no_children[as.numeric(unlist(dimnames(tabParents)))]<-tabParents
+  return(parents_no_children)
+}
+
+parents_no_children_1<-calcChildren(fitness1)
+parents_no_children_10<-calcChildren(fitness10)
+parents_no_children_100<-calcChildren(fitness100)
+parents_no_children_1000<-calcChildren(fitness1000)
+```
+
+## How many children by fitness?
+
+### fitness1
+```{r}
+barplot(table(parents_no_children_1))
+summary(lm(parents_no_children_1~fitness1))
+plot(0:10,tapply(fitness1[parents_no_children_1<11],parents_no_children_1[parents_no_children_1<11],mean),type="l",xlab="No. Children",ylab="Mean Fitness")
+```
+
+### fitness10
+```{r}
+barplot(table(parents_no_children_10))
+summary(lm(parents_no_children_10~fitness10))
+plot(0:10,tapply(fitness10[parents_no_children_10<11],parents_no_children_10[parents_no_children_10<11],mean),type="l",xlab="No. Children",ylab="Mean Fitness")
+```
+
+### fitness100
+```{r}
+barplot(table(parents_no_children_100))
+summary(lm(parents_no_children_100~fitness100))
+plot(0:10,tapply(fitness100[parents_no_children_100<11],parents_no_children_100[parents_no_children_100<11],mean),type="l",xlab="No. Children",ylab="Mean Fitness")
+```
+
+### fitness1000
+```{r}
+barplot(table(parents_no_children_1000))
+summary(lm(parents_no_children_1000~fitness1000))
+plot(0:10,tapply(fitness1000[parents_no_children_1000<11],parents_no_children_1000[parents_no_children_1000<11],mean),type="l",xlab="No. Children",ylab="Mean Fitness")
+```
+
+
+The linear models and graphs show that for the first fitness equation, the number of children increases as fitness increases. However, for the other equations, the relationship is less clear. 
+
+Therefore, fitness is relative.
+
+Quick way to show this:
+```{r}
+table(sample(c(1,2,3,4,5),100000,T,prob=c(0.8,0.9,1,1.1,1.2)))
+table(sample(c(1,2,3,4,5),100000,T,prob=c(9.8,.9,10,10.1,10.2)))
+table(sample(c(1,2,3,4,5),100000,T,prob=c(99.8,99.9,100,100.1,100.2)))
+```

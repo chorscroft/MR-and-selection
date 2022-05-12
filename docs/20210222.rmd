@@ -1,0 +1,93 @@
+---
+title: "MR vs selection"
+output: html_notebook
+---
+
+
+# phenotype -> fitness
+
+```{r}
+library(dplyr)
+
+nparents <- 1000000
+nkids <- 1000000
+b_g1x <- 0.5
+b_g2x <- 0.2
+g1 <- rbinom(nparents, 2, 0.5)
+g2 <- rbinom(nparents, 2, 0.5)
+x <- 10 + g1 * b_g1x + g2 * b_g2x + rnorm(nparents)
+b_xfitness <- 0.05
+fitness <- 1 + b_xfitness * (x - mean(x))
+
+mean(x)
+mean(fitness)
+hist(fitness)
+```
+
+
+    b1
+g1 --->
+        x ----> fitness
+g2 --->   bxy
+    b2
+
+b_g1f = b_g1x * b_xfitness
+b_g2f = b_g2x * b_xfitness
+
+
+b_xfitness = b_g1f / b_g1x
+
+```{r}
+mod1 <- lm(fitness ~ g1 + g2)
+mod2 <- lm(x ~ g1 + g2)
+
+mod1$coefficients
+mod2$coefficients
+
+```
+
+estimate causal effect of x on fitness
+each genotype provides an independent effect estimate via the wald ratio
+
+```{r}
+mod1$coefficients[-1] / mod2$coefficients[-1]
+```
+
+```{r}
+child_parent_1 <- sample(1:nparents, nkids, replace=TRUE, prob=fitness)
+child_parent_2 <- sample(1:nparents, nkids, replace=TRUE, prob=fitness)
+
+parents_no_children<-rep(0,nparents)
+tabParents<-table(c(child_parent_1,child_parent_2))
+parents_no_children[as.numeric(unlist(dimnames(tabParents)))]<-tabParents
+barplot(table(parents_no_children))
+
+phi <- (fitness - mean(fitness))
+hist(phi)
+hist(log(phi))
+y <- rpois(nparents, log(phi))
+```
+
+```{r}
+
+mod3 <- lm(parents_no_children ~ g1 + g2)
+mod3
+bgyhat <- mod3$coefficients / mean(parents_no_children) * mean(fitness)
+```
+
+
+```{r}
+bgyhat[-1] / mod2$coefficients[-1]
+```
+
+
+
+```{r}
+library(TwoSampleMR)
+bgy <- summary(lm(parents_no_children ~ g1 + g2))
+bgx <- summary(lm(x ~ g1 + g2))
+C <- mean(fitness) / mean(parents_no_children)
+
+mr_ivw(bgx$coefficients[-1, 1], bgy$coefficients[-1, 1] * C, bgx$coefficients[-1, 2], bgy$coefficients[-1,2] * C)
+```
+
