@@ -12,10 +12,10 @@ filename=paste0(mr_sel_path,"/Meta_analysis_no_children_SD/METAANALYSIS1_NEW.TBL
 ieugwasr::get_access_token()
 
 # pick ID
-#id <- "ieu-b-4747"
+id <- "ieu-b-4760"
 
 # Initialise
-x <- Dataset$new(filename=filename)#, igd_id=id)
+x <- Dataset$new(filename=filename, igd_id=id)
 
 # Specify columns
 x$determine_columns(list(chr_col=16, snp_col=1, pos_col=17, oa_col=3, ea_col=2, eaf_col=4, beta_col=8, se_col=9, pval_col=10))

@@ -1,0 +1,95 @@
+---
+title: "Comparing GWAS hits"
+author: "Clare Horscroft"
+date: "28/06/2021"
+output: html_document
+---
+
+Which variants are GWAS hits for Number of Children (ieu-b-4760)? Which of these overlap with the GWAS hits for Number of Live Births (ukb-b-1209) and Number of Children Fathered (ukb-b-2227)?
+
+
+```{r packages, message=FALSE, warning=FALSE}
+library(rms2)
+library(gwasglue)
+library(coloc)
+```
+
+
+
+```{r initialise}
+no_children <- rms2$new("ieu-b-4760")
+no_live_births <- rms2$new("ukb-b-1209")
+no_fathered <- rms2$new("ukb-b-2227")
+```
+
+```{r GWAS_hits}
+no_children$extract_gwashits()
+no_live_births$extract_gwashits()
+no_fathered$extract_gwashits()
+```
+
+```{r get_hits}
+no_children$gwashits
+no_live_births$gwashits
+no_fathered$gwashits
+```
+
+See whether these hits colocalise
+
+```{r coloc_3, message=FALSE, warning=FALSE}
+# Compare number of children to number of live births
+check_if_coloc<-function(chrPos,snpPos){
+  child_births<-ieugwasr_to_coloc(no_children$igd_id,no_live_births$igd_id,chrPos)
+  coloc_result<-coloc.abf(child_births$dataset1,child_births$dataset2)
+  coloc_result$summary
+  ch1<-child_births$dataset1
+  ch1$position<-ch1$pos
+  ch2<-child_births$dataset2
+  ch2$position<-ch2$pos
+  child_fathered<-ieugwasr_to_coloc(no_children$igd_id,no_fathered$igd_id,chrPos)
+  coloc_result<-coloc.abf(child_fathered$dataset1,child_fathered$dataset2)
+  coloc_result$summary
+  ch3<-child_fathered$dataset2
+  ch3$position<-ch3$pos
+  layout(matrix(c(1,2,3)))
+  p1<-plot_dataset(ch1,main="Number of children")
+  abline(v=snpPos)
+  p2<-plot_dataset(ch2,main="Number of live births")
+  abline(v=snpPos)
+  p3<-plot_dataset(ch3,main="Number of children fathered")
+  abline(v=snpPos)
+  layout(1)
+}
+check_if_coloc("3:49715506-50390346",c(49915506,50190346))
+```
+```{r coloc_3_a, message=FALSE, warning=FALSE}
+check_if_coloc("3:85310543-85839672",c(85510543,85638325,85639672))
+```
+```{r coloc_6, message=FALSE, warning=FALSE}
+check_if_coloc("6:152040448-152444647",c(152240448,152244647))
+```
+```{r coloc_7, message=FALSE, warning=FALSE}
+check_if_coloc("7:114740159-115148351",c(114940159,114948351))
+```
+
+
+```{r coloc_8, message=FALSE, warning=FALSE}
+check_if_coloc("8:64921299-65333678",c(65121299,65133678))
+```
+
+```{r coloc_16, message=FALSE, warning=FALSE}
+check_if_coloc("16:89826512-90263890",c(90026512,90063890))
+```
+
+```{r coloc_17, message=FALSE, warning=FALSE}
+check_if_coloc("17:43732798-44531214",c(43932798,44331214))
+```
+
+## Results
+
+These are all the variants and whether they colocolise or not
+
+```{r final_table}
+
+```
+

@@ -22,4 +22,4 @@ snps<-unique(full_join(ukb_b_1209,ukb_b_2227))
 
 # join snp locations to meta file
 new_meta<-left_join(meta,snps,by=c("MarkerName"="variant_id"))
-write.table(new_meta,"METAANALYSIS1_NEW.TBL",quote = FALSE, sep ="\t",row.names = FALSE)
+write.table(new_meta,"METAANALYSIS1_NEW.TBL",quote = FALSE,row.names = FALSE)
